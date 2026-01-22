@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-LibrarySystem.BorrowScheduler-97c954ae-c308-49f0-a72d-fd0a3e7106f2</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit" Version="9.0.0" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LibrarySystem.Domain\LibrarySystem.Domain.csproj" />
+    <ProjectReference Include="..\LibrarySystem.Services\LibrarySystem.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LibrarySystem.Common">
+      <HintPath>..\CommonDll\LibrarySystem.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
