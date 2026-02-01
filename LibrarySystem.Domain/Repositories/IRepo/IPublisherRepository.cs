@@ -3,7 +3,7 @@ using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
 {
-    public interface IPublisherRepository : IGenericRepository<Publisher>
+    public interface IPublisherRepository
     {
         Task AddPublisherAsync(PublisherCreateDto dto);
         Task UpdatePublisherAsync(int id, PublisherUpdateDto dto);
@@ -12,6 +12,6 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<List<PublisherListDto>> GetAllListAsync();
         Task<Publisher> GetRequiredByIdAsync(int id);
 
-        Task<bool> ExistsByNameAsync(string name);
+        Task<bool> ExistsAsync(int id);
     }
 }

@@ -12,7 +12,7 @@ namespace LibrarySystem.Domain.Data
         public DbSet<BookCopy> BookCopies { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
-        public DbSet<Borrow> Borrows { get; set; }
+        public DbSet<Borrow> Borrows { get; set; } 
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -70,12 +70,20 @@ namespace LibrarySystem.Domain.Data
                 .WithMany()
                 .HasForeignKey(u => u.DeletedBy)
                 .OnDelete(DeleteBehavior.NoAction);
-        
-               
+            modelBuilder.Entity<BookCopy>(entity =>
+            {
+                entity.HasIndex(x => x.CopyCode).IsUnique();
+
+                entity.HasQueryFilter(x => !x.IsDeleted);
+                
+            });
+
+
+
 
 
         }
 
-        
+
     }
 }

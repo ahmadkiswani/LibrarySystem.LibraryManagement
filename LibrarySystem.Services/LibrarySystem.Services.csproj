@@ -23,8 +23,10 @@
 
   <ItemGroup>
     <Reference Include="LibrarySystem.Common">
-      <HintPath>..\..\LibrarySystem.Common\LibrarySystem.Common\bin\Debug\net10.0\LibrarySystem.Common.dll</HintPath>
+      <HintPath>..\CommonDll\LibrarySystem.Common.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+ 
 
 </Project>

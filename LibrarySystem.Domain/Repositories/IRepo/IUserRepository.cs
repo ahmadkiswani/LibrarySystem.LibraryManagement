@@ -3,7 +3,7 @@ using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
 {
-    public interface IUserRepository : IGenericRepository<User>
+    public interface IUserRepository 
     {
         Task ApplyUserCreatedAsync(UserCreateDto dto);
         Task ApplyUserUpdatedAsync(int externalUserId, UserUpdateDto dto);

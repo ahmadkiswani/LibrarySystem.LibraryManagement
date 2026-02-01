@@ -2,12 +2,14 @@
 using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BookCopyController : ControllerBase
     {
         private readonly IBookCopyService _service;
@@ -17,10 +19,11 @@ namespace LibrarySystem.API.Controllers
             _service = service;
         }
 
+        [Authorize(Policy = "BookCreate")]
         [HttpPost]
         public async Task<IActionResult> AddCopy([FromBody] BookCopyCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto( dto);
+            var validation = ValidationHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -29,26 +32,16 @@ namespace LibrarySystem.API.Controllers
                     Errors = validation.Errors
                 });
 
-            try
-            {
-                await _service.AddBookCopy(dto);
+            await _service.AddBookCopy(dto);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Copy added successfully"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return BadRequest(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Copy added successfully"
+            });
         }
 
+        [Authorize(Policy = "BookView")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -62,54 +55,35 @@ namespace LibrarySystem.API.Controllers
             });
         }
 
-        [HttpGet("{id}")]
+        [Authorize(Policy = "BookView")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetCopy(int id)
         {
-            try
-            {
-                var copy = await _service.GetSpecificCopy(id);
+            var copy = await _service.GetSpecificCopy(id);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Copy fetched successfully",
-                    Data = copy
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return NotFound(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Copy fetched successfully",
+                Data = copy
+            });
         }
 
-        [HttpPut("delete/{id}")]
+        [Authorize(Policy = "BookDelete")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _service.DeleteBookCopy(id);
+            await _service.DeleteBookCopy(id);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Copy deleted successfully"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return NotFound(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Copy deleted successfully"
+            });
         }
 
-        [HttpGet("total/{bookId}")]
+        [Authorize(Policy = "BookView")]
+        [HttpGet("total/{bookId:int}")]
         public async Task<IActionResult> GetTotalCopies(int bookId)
         {
             var count = await _service.GetAllCopiesCount(bookId);
@@ -122,7 +96,8 @@ namespace LibrarySystem.API.Controllers
             });
         }
 
-        [HttpGet("available/{bookId}")]
+        [Authorize(Policy = "BookView")]
+        [HttpGet("available/{bookId:int}")]
         public async Task<IActionResult> GetAvailableCopies(int bookId)
         {
             var count = await _service.GetAvailableCount(bookId);
@@ -135,7 +110,8 @@ namespace LibrarySystem.API.Controllers
             });
         }
 
-        [HttpGet("borrowed/{bookId}")]
+        [Authorize(Policy = "BookView")]
+        [HttpGet("borrowed/{bookId:int}")]
         public async Task<IActionResult> GetBorrowedCopies(int bookId)
         {
             var count = await _service.GetBorrowedCount(bookId);

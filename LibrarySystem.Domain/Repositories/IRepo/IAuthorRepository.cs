@@ -1,17 +1,18 @@
-﻿using LibrarySystem.Common.DTOs.Library.Authors;
-using LibrarySystem.Entities.Models;
+﻿using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
 {
-    public interface IAuthorRepository : IGenericRepository<Author>
+    public interface IAuthorRepository
     {
-        Task AddAuthorAsync(AuthorCreateDto dto);
+        Task AddAsync(Author author);
+        Task UpdateAsync(Author author);
+        Task SoftDeleteAsync(Author author);
 
-        Task SoftDeleteByIdAsync(int id);
-        Task UpdateNameAsync(int id, string authorName);
+        Task<Author?> GetByIdAsync(int id);
+        Task<List<Author>> GetAllAsync();
 
-        Task<List<AuthorListDto>> GetAllListAsync();
-        Task<List<AuthorListDto>> SearchAsync(AuthorSearchDto dto);
-        Task<AuthorDetailsDto> GetDetailsAsync(int id);
+        Task<List<Author>> SearchAsync(string? text, int? number, int page, int pageSize);
+
+        Task<bool> ExistsAsync(int authorId);
     }
 }

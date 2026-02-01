@@ -1,12 +1,14 @@
 ﻿using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "UserManage")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _service;
@@ -16,8 +18,6 @@ namespace LibrarySystem.API.Controllers
             _service = service;
         }
 
-        [HttpPost]
-     
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -30,34 +30,18 @@ namespace LibrarySystem.API.Controllers
                 Data = users
             });
         }
-        [HttpGet("details/{id}")]
+
+        [HttpGet("details/{id:int}")]
         public async Task<IActionResult> GetUserDetails(int id)
         {
-            try
-            {
-                var user = await _service.GetUserDetails(id);
+            var user = await _service.GetUserDetails(id);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "User details fetched successfully",
-                    Data = user
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return NotFound(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "User details fetched successfully",
+                Data = user
+            });
         }
-
-
-       
-
-     
-
     }
 }

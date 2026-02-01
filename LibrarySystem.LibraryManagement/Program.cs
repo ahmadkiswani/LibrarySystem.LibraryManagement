@@ -1,9 +1,13 @@
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.Messaging;
 using LibrarySystem.Common.Middleware;
+using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Data;
+using LibrarySystem.Domain.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Domain.Repositories.Repo;
+using LibrarySystem.Entities.Models;
+using LibrarySystem.Helper.Api;
 using LibrarySystem.Services;
 using LibrarySystem.Services.Interfaces;
 using MassTransit;
@@ -11,8 +15,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using RabbitMQ.Client;
 using System.Text;
+using Microsoft.OpenApi.Models;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -175,10 +183,37 @@ builder.Services.AddMassTransit(x =>
         });
     });
 });
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT token"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 #endregion
 
 #region Services
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IBookCopyService, BookCopyService>();
@@ -193,6 +228,18 @@ builder.Services.AddScoped<IBookCopyRepository, BookCopyRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
+
+
+// ===== Generic Repository registrations =====
+builder.Services.AddScoped<IRepository<Author>, Repository<LibraryDbContext, Author>>();
+builder.Services.AddScoped<IRepository<Book>, Repository<LibraryDbContext, Book>>();
+builder.Services.AddScoped<IRepository<BookCopy>, Repository<LibraryDbContext, BookCopy>>();
+builder.Services.AddScoped<IRepository<Category>, Repository<LibraryDbContext, Category>>();
+builder.Services.AddScoped<IRepository<Publisher>, Repository<LibraryDbContext, Publisher>>();
+builder.Services.AddScoped<IRepository<Borrow>, Repository<LibraryDbContext, Borrow>>();
+builder.Services.AddScoped<IRepository<User>, Repository<LibraryDbContext, User>>();
 #endregion
 
 

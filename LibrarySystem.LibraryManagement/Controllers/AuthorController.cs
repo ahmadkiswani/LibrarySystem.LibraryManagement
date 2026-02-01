@@ -4,22 +4,27 @@ using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace LibrarySystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AuthorController : ControllerBase
     {
         private readonly IAuthorService _service;
+        private readonly ICurrentUserContext _currentUser;
 
-        public AuthorController(IAuthorService service)
+        public AuthorController(
+            IAuthorService service,
+            ICurrentUserContext currentUser)
         {
             _service = service;
+            _currentUser = currentUser;
         }
 
+        [Authorize(Policy = "BookCreate")]
         [HttpPost]
         public async Task<IActionResult> AddAuthor([FromBody] AuthorCreateDto dto)
         {
@@ -34,10 +39,7 @@ namespace LibrarySystem.API.Controllers
                 });
             }
 
-            // You must provide an int id as the second argument.
-            // If the id should be generated or is not available from the client, you need to clarify how to obtain it.
-            // For now, passing 0 as a placeholder. Replace with actual logic as needed.
-            await _service.AddAuthor(dto);
+            await _service.AddAuthor(_currentUser.LocalUserId, dto);
 
             return Ok(new BaseResponse<object>
             {
@@ -46,6 +48,7 @@ namespace LibrarySystem.API.Controllers
             });
         }
 
+        [Authorize(Policy = "BookView")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -59,36 +62,25 @@ namespace LibrarySystem.API.Controllers
             });
         }
 
-
-        [HttpGet("{id}")]
+        [Authorize(Policy = "BookView")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            try
-            {
-                var author = await _service.GetAuthorById(id);
+            var author = await _service.GetAuthorById(id);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Author fetched successfully",
-                    Data = author
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return NotFound(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Author fetched successfully",
+                Data = author
+            });
         }
 
-        [HttpPut("{id}")]
+        [Authorize(Policy = "BookUpdate")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] AuthorUpdateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto( dto);
-
+            var validation = ValidationHelper.ValidateDto(dto);
             if (!validation.IsValid)
             {
                 return BadRequest(new BaseResponse<object>
@@ -99,77 +91,46 @@ namespace LibrarySystem.API.Controllers
                 });
             }
 
-            try
-            {
-                await _service.EditAuthor(id, dto);
+            await _service.EditAuthor(_currentUser.LocalUserId, id, dto);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Author updated successfully"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return NotFound(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Author updated successfully"
+            });
         }
 
-        [HttpPut("delete/{id}")]
+        [Authorize(Policy = "BookDelete")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _service.DeleteAuthor(id);
+            await _service.DeleteAuthor(_currentUser.LocalUserId, id);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Author deleted successfully"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return NotFound(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Author deleted successfully"
+            });
         }
+
         [Authorize]
         [HttpGet("whoami")]
         public IActionResult WhoAmI()
         {
-            var userId = int.Parse( User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-
-            var roles = User.Claims
-                .Where(c => c.Type == ClaimTypes.Role)
-                .Select(c => c.Value)
-                .ToList();
-
             return Ok(new
             {
-                userId,
-                roles
+                externalUserId = _currentUser.ExternalUserId,
+                localUserId = _currentUser.LocalUserId,
+                roles = User.Claims
+                    .Where(c => c.Type == ClaimTypes.Role)
+                    .Select(c => c.Value)
+                    .ToList(),
+                permissions = User.Claims
+                    .Where(c => c.Type == "permission")
+                    .Select(c => c.Value)
+                    .Distinct()
+                    .ToList()
             });
         }
-        [Authorize]
-        [HttpGet("debug-claims")]
-        public IActionResult DebugClaims()
-        {
-            return Ok(User.Claims.Select(c => new
-            {
-                c.Type,
-                c.Value
-            }));
-        }
-
     }
-
 }

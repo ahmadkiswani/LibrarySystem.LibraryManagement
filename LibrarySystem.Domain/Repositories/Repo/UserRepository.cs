@@ -1,17 +1,18 @@
 ﻿using LibrarySystem.Common.DTOs.Library.Users;
-using LibrarySystem.Domain.Data;
+using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Domain.Repositories.Repo
 {
-    public class UserRepository
-        : GenericRepository<User>, IUserRepository
+    public class UserRepository : IUserRepository
     {
-        public UserRepository(LibraryDbContext context)
-            : base(context)
+        private readonly IRepository<User> _repo;
+
+        public UserRepository(IRepository<User> repo)
         {
+            _repo = repo;
         }
 
         public async Task ApplyUserCreatedAsync(UserCreateDto dto)
@@ -19,14 +20,14 @@ namespace LibrarySystem.Domain.Repositories.Repo
             if (await ExistsByExternalIdAsync(dto.ExternalUserId))
                 return;
 
-            var user = new User
+            await _repo.AddAsync(new User
             {
                 ExternalUserId = dto.ExternalUserId,
                 UserName = dto.UserName,
                 UserEmail = dto.UserEmail
-            };
+            });
 
-            await AddAsync(user);
+            await _repo.SaveAsync();
         }
 
         public async Task ApplyUserUpdatedAsync(int externalUserId, UserUpdateDto dto)
@@ -37,7 +38,8 @@ namespace LibrarySystem.Domain.Repositories.Repo
             user.UserName = dto.UserName;
             user.UserEmail = dto.UserEmail;
 
-            await UpdateAsync(user);
+            await _repo.UpdateAsync(user);
+            await _repo.SaveAsync();
         }
 
         public async Task ApplyUserDeactivatedAsync(int externalUserId)
@@ -45,36 +47,29 @@ namespace LibrarySystem.Domain.Repositories.Repo
             var user = await GetByExternalIdAsync(externalUserId);
             if (user == null) return;
 
-            await SoftDeleteAsync(user);
+            _repo.SoftDelete(user);
+            await _repo.SaveAsync();
         }
 
-        public async Task<List<UserListDto>> GetAllListAsync()
-        {
-            return await GetQueryable()
+        public Task<List<UserListDto>> GetAllListAsync()
+            => _repo.GetQueryable()
+                .AsNoTracking()
                 .Select(u => new UserListDto
                 {
                     Id = u.Id,
                     UserName = u.UserName
                 })
                 .ToListAsync();
-        }
 
         public async Task<User> GetRequiredByIdAsync(int id)
-        {
-            return await GetByIdAsync(id)
+            => await _repo.GetByIdAsync(id)
                 ?? throw new Exception("User not found");
-        }
 
-        public async Task<User?> GetByExternalIdAsync(int externalUserId)
-        {
-            return await _dbSet
+        public Task<User?> GetByExternalIdAsync(int externalUserId)
+            => _repo.GetQueryable()
                 .FirstOrDefaultAsync(u => u.ExternalUserId == externalUserId);
-        }
 
-        public async Task<bool> ExistsByExternalIdAsync(int externalUserId)
-        {
-            return await _dbSet
-                .AnyAsync(u => u.ExternalUserId == externalUserId);
-        }
+        public Task<bool> ExistsByExternalIdAsync(int externalUserId)
+            => _repo.GetQueryable().AnyAsync(u => u.ExternalUserId == externalUserId);
     }
 }

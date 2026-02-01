@@ -1,98 +1,79 @@
-﻿using LibrarySystem.Common.DTOs.Library.Authors;
-using LibrarySystem.Domain.Data;
-using LibrarySystem.Domain.Helper;
+﻿using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Domain.Repositories.Repo
 {
-    public class AuthorRepository : GenericRepository<Author>, IAuthorRepository
+    public class AuthorRepository : IAuthorRepository
     {
-        public AuthorRepository(LibraryDbContext context)
-            : base(context)
-        {
-        }
-        public async Task AddAuthorAsync(AuthorCreateDto dto)
-        {
-            var author = new Author
-            {
-                AuthorName = dto.AuthorName
-            };
+        private readonly IRepository<Author> _authorRepo;
 
-            AuditHelper.OnCreate(author);
-
-            await AddAsync(author);
+        public AuthorRepository(IRepository<Author> authorRepo)
+        {
+            _authorRepo = authorRepo;
         }
 
-        public async Task SoftDeleteByIdAsync(int id)
+        public async Task AddAsync(Author author)
         {
-            var author = await GetByIdAsync(id);
-            if (author == null)
-                throw new Exception("Author not found");
-
-            AuditHelper.OnSoftDelete(author, id);
-            await SoftDeleteAsync(author);
+            await _authorRepo.AddAsync(author);
+            await _authorRepo.SaveAsync();
         }
 
-        public async Task UpdateNameAsync(int id, string authorName)
+        public async Task UpdateAsync(Author author)
         {
-            var author = await GetByIdAsync(id);
-            if (author == null)
-                throw new Exception("Author not found");
-
-            author.AuthorName = authorName;
-            AuditHelper.OnUpdate(author, id);
-
-            await UpdateAsync(author);
+            await _authorRepo.UpdateAsync(author);
+            await _authorRepo.SaveAsync();
         }
 
-        public async Task<List<AuthorListDto>> GetAllListAsync()
+        public async Task SoftDeleteAsync(Author author)
         {
-            return await GetQueryable()
-                .Select(a => new AuthorListDto
-                {
-                    Id = a.Id,
-                    AuthorName = a.AuthorName
-                })
+            _authorRepo.SoftDelete(author);
+            await _authorRepo.SaveAsync();
+        }
+
+        public async Task<Author?> GetByIdAsync(int id)
+        {
+            return await _authorRepo.GetFirstAsync(a => a.Id == id);
+        }
+
+        public async Task<List<Author>> GetAllAsync()
+        {
+            return await _authorRepo
+                .GetQueryable()
+                .AsNoTracking()
                 .ToListAsync();
         }
 
-        public async Task<AuthorDetailsDto> GetDetailsAsync(int id)
+        public async Task<List<Author>> SearchAsync(
+            string? text,
+            int? number,
+            int page,
+            int pageSize)
         {
-            return await GetQueryable()
-                .Where(a => a.Id == id)
-                .Select(a => new AuthorDetailsDto
-                {
-                    Id = a.Id,
-                    AuthorName = a.AuthorName
-                })
-                .FirstOrDefaultAsync()
-                ?? throw new Exception("Author not found");
-        }
+            var query = _authorRepo
+                .GetQueryable()
+                .AsNoTracking();
 
-        public async Task<List<AuthorListDto>> SearchAsync(AuthorSearchDto dto)
-        {
-            var query = GetQueryable();
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(a => a.AuthorName.Contains(text));
 
-            if (!string.IsNullOrWhiteSpace(dto.Text))
-                query = query.Where(a => a.AuthorName.Contains(dto.Text));
-
-            if (dto.Number.HasValue)
-                query = query.Where(a => a.Id == dto.Number.Value);
-
-            int page = dto.Page <= 0 ? 1 : dto.Page;
-            int pageSize = dto.PageSize <= 0 || dto.PageSize > 200 ? 10 : dto.PageSize;
+            if (number.HasValue)
+                query = query.Where(a => a.Id == number.Value);
 
             return await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(a => new AuthorListDto
-                {
-                    Id = a.Id,
-                    AuthorName = a.AuthorName
-                })
                 .ToListAsync();
         }
+
+        public Task<bool> ExistsAsync(int authorId)
+        {
+            return _authorRepo
+                .GetQueryable()
+                .AsNoTracking()
+                .AnyAsync(a => a.Id == authorId);
+        }
+
     }
 }

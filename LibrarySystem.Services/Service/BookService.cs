@@ -1,45 +1,43 @@
 ﻿using LibrarySystem.Common.DTOs.Library.Books;
-using LibrarySystem.Domain.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Services
 {
     public class BookService : IBookService
     {
         private readonly IBookRepository _bookRepo;
-        private readonly IAuthorRepository _authorRepository;
-        private readonly ICategoryRepository _categoryRepository;
-        private readonly IPublisherRepository _publisherRepository;
-        private readonly IBookCopyRepository _bookCopyRepository;
-        private readonly IBorrowRepository _borrowRepository;
+        private readonly IAuthorRepository _authorRepo;
+        private readonly ICategoryRepository _categoryRepo;
+        private readonly IPublisherRepository _publisherRepo;
+        private readonly IBookCopyRepository _copyRepo;
+        private readonly IBorrowRepository _borrowRepo;
 
         public BookService(
             IBookRepository bookRepo,
-            IAuthorRepository authorRepository,
-            ICategoryRepository categoryRepository,
-            IPublisherRepository publisherRepository,
-            IBookCopyRepository bookCopyRepository,
-            IBorrowRepository borrowRepository)
+            IAuthorRepository authorRepo,
+            ICategoryRepository categoryRepo,
+            IPublisherRepository publisherRepo,
+            IBookCopyRepository copyRepo,
+            IBorrowRepository borrowRepo)
         {
             _bookRepo = bookRepo;
-            _authorRepository = authorRepository;
-            _categoryRepository = categoryRepository;
-            _publisherRepository = publisherRepository;
-            _bookCopyRepository = bookCopyRepository;
-            _borrowRepository = borrowRepository;
+            _authorRepo = authorRepo;
+            _categoryRepo = categoryRepo;
+            _publisherRepo = publisherRepo;
+            _copyRepo = copyRepo;
+            _borrowRepo = borrowRepo;
         }
 
         public async Task<int> AddBook(BookCreateDto dto)
         {
-            if (!await _authorRepository.GetQueryable().AnyAsync(a => a.Id == dto.AuthorId))
+            if (!await _authorRepo.ExistsAsync(dto.AuthorId))
                 throw new Exception("Author does not exist");
 
-            if (!await _categoryRepository.GetQueryable().AnyAsync(c => c.Id == dto.CategoryId))
+            if (!await _categoryRepo.ExistsAsync(dto.CategoryId))
                 throw new Exception("Category does not exist");
 
-            if (!await _publisherRepository.GetQueryable().AnyAsync(p => p.Id == dto.PublisherId))
+            if (!await _publisherRepo.ExistsAsync(dto.PublisherId))
                 throw new Exception("Publisher does not exist");
 
             if (await _bookRepo.ExistsAsync(dto))
@@ -48,14 +46,20 @@ namespace LibrarySystem.Services
             return await _bookRepo.AddBookAsync(dto);
         }
 
+        public Task EditBook(int id, BookUpdateDto dto)
+            => _bookRepo.UpdateBookAsync(id, dto);
+
+        public Task DeleteBook(int id)
+            => _bookRepo.SoftDeleteByIdAsync(id);
+
         public async Task<BookDetailsDto> GetBookById(int id)
         {
             var book = await _bookRepo.GetDetailsAsync(id)
                 ?? throw new Exception("Book not found");
 
-            int total = await _bookCopyRepository.CountByBookAsync(id);
-            int available = await _bookCopyRepository.CountAvailableAsync(id);
-            var lastBorrow = await _borrowRepository.GetLastBorrowDateByBookAsync(id);
+            int total = await _copyRepo.CountByBookAsync(id);
+            int available = await _copyRepo.CountAvailableAsync(id);
+            var lastBorrow = await _borrowRepo.GetLastBorrowDateByBookAsync(id);
 
             return new BookDetailsDto
             {
@@ -76,12 +80,6 @@ namespace LibrarySystem.Services
 
         public Task<List<BookListDto>> GetAllBooks()
             => _bookRepo.SearchAsync(new BookSearchDto());
-
-        public Task EditBook(int id, BookUpdateDto dto)
-            => _bookRepo.UpdateBookAsync(id, dto);
-
-        public Task DeleteBook(int id)
-            => _bookRepo.SoftDeleteByIdAsync(id);
 
         public Task<List<BookListDto>> SearchBooks(BookSearchDto dto)
             => _bookRepo.SearchAsync(dto);

@@ -3,7 +3,7 @@ using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
 {
-    public interface ICategoryRepository : IGenericRepository<Category>
+    public interface ICategoryRepository 
     {
         Task AddCategoryAsync(CategoryCreateDto dto);
         Task UpdateCategoryAsync(int id, CategoryUpdateDto dto);
@@ -13,5 +13,7 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<Category> GetRequiredByIdAsync(int id);
 
         Task<bool> ExistsByNameAsync(string name);
+        Task<bool> ExistsAsync(int id);
+
     }
 }

@@ -1,17 +1,18 @@
 ﻿using LibrarySystem.Common.DTOs.Library.Categories;
-using LibrarySystem.Domain.Data;
+using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Domain.Repositories.Repo
 {
-    public class CategoryRepository
-        : GenericRepository<Category>, ICategoryRepository
+    public class CategoryRepository : ICategoryRepository
     {
-        public CategoryRepository(LibraryDbContext context)
-            : base(context)
+        private readonly IRepository<Category> _repo;
+
+        public CategoryRepository(IRepository<Category> repo)
         {
+            _repo = repo;
         }
 
         public async Task AddCategoryAsync(CategoryCreateDto dto)
@@ -19,51 +20,47 @@ namespace LibrarySystem.Domain.Repositories.Repo
             if (await ExistsByNameAsync(dto.Name))
                 throw new Exception("Category already exists");
 
-            var category = new Category
-            {
-                Name = dto.Name
-            };
-
-            await AddAsync(category);
+            await _repo.AddAsync(new Category { Name = dto.Name });
+            await _repo.SaveAsync();
         }
 
         public async Task UpdateCategoryAsync(int id, CategoryUpdateDto dto)
         {
-            var category = await GetByIdAsync(id)
+            var category = await _repo.GetByIdAsync(id)
                 ?? throw new Exception("Category not found");
 
             category.Name = dto.Name;
-            await UpdateAsync(category);
+            await _repo.UpdateAsync(category);
+            await _repo.SaveAsync();
         }
 
         public async Task SoftDeleteByIdAsync(int id)
         {
-            var category = await GetByIdAsync(id)
+            var category = await _repo.GetByIdAsync(id)
                 ?? throw new Exception("Category not found");
 
-            await SoftDeleteAsync(category);
+            _repo.SoftDelete(category);
+            await _repo.SaveAsync();
         }
 
-        public async Task<List<CategoryListDto>> GetAllListAsync()
-        {
-            return await GetQueryable()
+        public Task<List<CategoryListDto>> GetAllListAsync()
+            => _repo.GetQueryable()
+                .AsNoTracking()
                 .Select(c => new CategoryListDto
                 {
                     Id = c.Id,
                     Name = c.Name
                 })
                 .ToListAsync();
-        }
+
+        public Task<bool> ExistsByNameAsync(string name)
+            => _repo.GetQueryable().AnyAsync(c => c.Name == name);
 
         public async Task<Category> GetRequiredByIdAsync(int id)
-        {
-            return await GetByIdAsync(id)
+            => await _repo.GetByIdAsync(id)
                 ?? throw new Exception("Category not found");
-        }
+        public Task<bool> ExistsAsync(int id)
+    => _repo.GetQueryable().AnyAsync(c => c.Id == id);
 
-        public async Task<bool> ExistsByNameAsync(string name)
-        {
-            return await _dbSet.AnyAsync(c => c.Name == name);
-        }
     }
 }

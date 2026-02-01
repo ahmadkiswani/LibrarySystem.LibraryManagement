@@ -1,5 +1,5 @@
 ﻿using LibrarySystem.Common.DTOs.Library.BookCopies;
-using LibrarySystem.Domain.Data;
+using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Helper;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
@@ -7,43 +7,79 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Domain.Repositories.Repo
 {
-    public class BookCopyRepository
-        : GenericRepository<BookCopy>, IBookCopyRepository
+    public class BookCopyRepository : IBookCopyRepository
     {
-        public BookCopyRepository(LibraryDbContext context)
-            : base(context)
+        private readonly IRepository<BookCopy> _copyRepo;
+
+        public BookCopyRepository(IRepository<BookCopy> copyRepo)
         {
+            _copyRepo = copyRepo;
         }
 
         public async Task AddCopyAsync(BookCopyCreateDto dto, Book book)
         {
+            string code;
+            int tries = 0;
+
+            do
+            {
+                code = Guid.NewGuid().ToString("N")[..8].ToUpper();
+                tries++;
+                if (tries > 5)
+                    throw new Exception("Failed to generate unique CopyCode");
+            }
+            while (await _copyRepo.GetQueryable().AnyAsync(x => x.CopyCode == code));
+
             var copy = new BookCopy
             {
                 BookId = dto.BookId,
                 AuthorId = book.AuthorId,
                 CategoryId = book.CategoryId,
                 PublisherId = book.PublisherId,
-                CopyCode = Guid.NewGuid().ToString()[..8],
+                CopyCode = code,
                 IsAvailable = true
             };
 
             AuditHelper.OnCreate(copy);
-            await AddAsync(copy);
+
+            await _copyRepo.AddAsync(copy);
+            await _copyRepo.SaveAsync();
         }
 
-        public async Task SoftDeleteByIdAsync(int copyId)
+        public async Task DeleteCopyAsync(int copyId)
         {
-            var copy = await GetByIdAsync(copyId);
-            if (copy == null)
-                throw new Exception("Copy not found");
+            var copy = await _copyRepo.GetFirstAsync(x => x.Id == copyId)
+                ?? throw new Exception("Copy not found");
 
-            AuditHelper.OnSoftDelete(copy, copyId);
-            await SoftDeleteAsync(copy);
+            if (!copy.IsAvailable)
+                throw new Exception("Cannot delete a borrowed copy");
+
+            AuditHelper.OnSoftDelete(copy, null);
+
+            _copyRepo.SoftDelete(copy);
+            await _copyRepo.SaveAsync();
+        }
+
+        public async Task<BookCopy?> GetByIdWithBookIdAsync(int copyId)
+        {
+            return await _copyRepo
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(x => x.Id == copyId)
+                .Select(x => new BookCopy
+                {
+                    Id = x.Id,
+                    BookId = x.BookId,
+                    IsAvailable = x.IsAvailable
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<List<BookCopyListDto>> GetAllListAsync()
         {
-            return await GetQueryable()
+            return await _copyRepo
+                .GetQueryable()
+                .AsNoTracking()
                 .Select(c => new BookCopyListDto
                 {
                     Id = c.Id,
@@ -55,23 +91,20 @@ namespace LibrarySystem.Domain.Repositories.Repo
 
         public async Task<BookCopy> GetRequiredCopyAsync(int id)
         {
-            var copy = await GetByIdAsync(id);
-            if (copy == null)
-                throw new Exception("Copy not found");
-
-            return copy;
+            return await _copyRepo.GetFirstAsync(x => x.Id == id)
+                ?? throw new Exception("Copy not found");
         }
 
-        public async Task<int> CountByBookAsync(int bookId)
-            => await _dbSet.CountAsync(c => c.BookId == bookId);
+        public Task<int> CountByBookAsync(int bookId)
+            => _copyRepo.GetQueryable().AsNoTracking()
+                .CountAsync(c => c.BookId == bookId);
 
-        public async Task<int> CountAvailableAsync(int bookId)
-            => await _dbSet.CountAsync(c => c.BookId == bookId && c.IsAvailable);
+        public Task<int> CountAvailableAsync(int bookId)
+            => _copyRepo.GetQueryable().AsNoTracking()
+                .CountAsync(c => c.BookId == bookId && c.IsAvailable);
 
-        public async Task<int> CountBorrowedAsync(int bookId)
-            => await _dbSet.CountAsync(c => c.BookId == bookId && !c.IsAvailable);
-
-        public async Task<bool> IsCopyAvailableAsync(int copyId)
-            => await _dbSet.AnyAsync(c => c.Id == copyId && c.IsAvailable);
+        public Task<int> CountBorrowedAsync(int bookId)
+            => _copyRepo.GetQueryable().AsNoTracking()
+                .CountAsync(c => c.BookId == bookId && !c.IsAvailable);
     }
 }

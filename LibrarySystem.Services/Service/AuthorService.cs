@@ -14,36 +14,77 @@ namespace LibrarySystem.Services
         {
             _authorRepo = authorRepo;
         }
-        public async Task AddAuthor(AuthorCreateDto dto)
+
+        public async Task AddAuthor(int userId, AuthorCreateDto dto)
         {
-            await _authorRepo.AddAuthorAsync(dto);
+            var author = new Author
+            {
+                AuthorName = dto.AuthorName
+            };
+
+            AuditHelper.OnCreate(author);
+            await _authorRepo.AddAsync(author);
         }
 
-
-        public async Task DeleteAuthor(int id)
+        public async Task EditAuthor(int userId, int id, AuthorUpdateDto dto)
         {
-            await _authorRepo.SoftDeleteByIdAsync(id);
+            var author = await _authorRepo.GetByIdAsync(id)
+                ?? throw new Exception("Author not found");
+
+            author.AuthorName = dto.AuthorName;
+            AuditHelper.OnUpdate(author, userId);
+
+            await _authorRepo.UpdateAsync(author);
         }
 
-        public async Task EditAuthor(int id, AuthorUpdateDto dto)
+        public async Task DeleteAuthor(int userId, int id)
         {
-            await _authorRepo.UpdateNameAsync(id, dto.AuthorName);
+            var author = await _authorRepo.GetByIdAsync(id)
+                ?? throw new Exception("Author not found");
+
+            AuditHelper.OnSoftDelete(author, userId);
+            await _authorRepo.SoftDeleteAsync(author);
         }
 
         public async Task<List<AuthorListDto>> GetAllAuthors()
         {
-            return await _authorRepo.GetAllListAsync();
+            var authors = await _authorRepo.GetAllAsync();
+
+            return authors.Select(a => new AuthorListDto
+            {
+                Id = a.Id,
+                AuthorName = a.AuthorName
+            }).ToList();
         }
 
         public async Task<AuthorDetailsDto> GetAuthorById(int id)
         {
-            return await _authorRepo.GetDetailsAsync(id);
+            var author = await _authorRepo.GetByIdAsync(id)
+                ?? throw new Exception("Author not found");
+
+            return new AuthorDetailsDto
+            {
+                Id = author.Id,
+                AuthorName = author.AuthorName
+            };
         }
 
         public async Task<List<AuthorListDto>> Search(AuthorSearchDto dto)
         {
-            return await _authorRepo.SearchAsync(dto);
-        }
+            int page = dto.Page <= 0 ? 1 : dto.Page;
+            int pageSize = dto.PageSize <= 0 || dto.PageSize > 200 ? 10 : dto.PageSize;
 
+            var authors = await _authorRepo.SearchAsync(
+                dto.Text,
+                dto.Number,
+                page,
+                pageSize);
+
+            return authors.Select(a => new AuthorListDto
+            {
+                Id = a.Id,
+                AuthorName = a.AuthorName
+            }).ToList();
+        }
     }
 }

@@ -1,5 +1,4 @@
 <Solution>
-  <Project Path="LibrarySystem.BorrowScheduler/LibrarySystem.BorrowScheduler.csproj" />
   <Project Path="LibrarySystem.Domain/LibrarySystem.Domain.csproj" />
   <Project Path="LibrarySystem.Entities/LibrarySystem.Entities.csproj" />
   <Project Path="LibrarySystem.LibraryManagement/LibrarySystem.Api.csproj" />

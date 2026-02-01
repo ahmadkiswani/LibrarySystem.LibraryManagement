@@ -1,17 +1,18 @@
 ﻿using LibrarySystem.Common.DTOs.Library.Publishers;
-using LibrarySystem.Domain.Data;
+using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Domain.Repositories.Repo
 {
-    public class PublisherRepository
-        : GenericRepository<Publisher>, IPublisherRepository
+    public class PublisherRepository : IPublisherRepository
     {
-        public PublisherRepository(LibraryDbContext context)
-            : base(context)
+        private readonly IRepository<Publisher> _repoP;
+
+        public PublisherRepository(IRepository<Publisher> repo)
         {
+            _repoP = repo;
         }
 
         public async Task AddPublisherAsync(PublisherCreateDto dto)
@@ -19,51 +20,55 @@ namespace LibrarySystem.Domain.Repositories.Repo
             if (await ExistsByNameAsync(dto.Name))
                 throw new Exception("Publisher already exists");
 
-            var publisher = new Publisher
-            {
-                Name = dto.Name
-            };
-
-            await AddAsync(publisher);
+            await _repoP.AddAsync(new Publisher { Name = dto.Name });
+            await _repoP.SaveAsync();
         }
 
         public async Task UpdatePublisherAsync(int id, PublisherUpdateDto dto)
         {
-            var publisher = await GetByIdAsync(id)
+            var publisher = await _repoP.GetByIdAsync(id)
                 ?? throw new Exception("Publisher not found");
 
             publisher.Name = dto.Name;
-            await UpdateAsync(publisher);
+            await _repoP.UpdateAsync(publisher);
+            await _repoP.SaveAsync();
         }
 
         public async Task SoftDeleteByIdAsync(int id)
         {
-            var publisher = await GetByIdAsync(id)
+            var publisher = await _repoP.GetByIdAsync(id)
                 ?? throw new Exception("Publisher not found");
 
-            await SoftDeleteAsync(publisher);
+            _repoP.SoftDelete(publisher);
+            await _repoP.SaveAsync();
         }
 
-        public async Task<List<PublisherListDto>> GetAllListAsync()
-        {
-            return await GetQueryable()
+        public Task<List<PublisherListDto>> GetAllListAsync()
+            => _repoP.GetQueryable()
+                .AsNoTracking()
                 .Select(p => new PublisherListDto
                 {
                     Id = p.Id,
                     Name = p.Name
                 })
                 .ToListAsync();
-        }
 
         public async Task<Publisher> GetRequiredByIdAsync(int id)
-        {
-            return await GetByIdAsync(id)
+            => await _repoP.GetByIdAsync(id)
                 ?? throw new Exception("Publisher not found");
+
+        public Task<bool> ExistsByNameAsync(string name)
+            => _repoP.GetQueryable().AnyAsync(p => p.Name == name);
+
+
+
+        public Task<bool> ExistsAsync(int id)
+        {
+            return _repoP
+                .GetQueryable()
+                .AsNoTracking()
+                .AnyAsync(p => p.Id == id);
         }
 
-        public async Task<bool> ExistsByNameAsync(string name)
-        {
-            return await _dbSet.AnyAsync(p => p.Name == name);
-        }
     }
 }

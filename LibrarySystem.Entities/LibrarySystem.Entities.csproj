@@ -17,8 +17,10 @@
 
   <ItemGroup>
     <Reference Include="LibrarySystem.Common">
-      <HintPath>..\Common_Dll\LibrarySystem.Common.dll</HintPath>
+      <HintPath>..\CommonDll\LibrarySystem.Common.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+  
 
 </Project>

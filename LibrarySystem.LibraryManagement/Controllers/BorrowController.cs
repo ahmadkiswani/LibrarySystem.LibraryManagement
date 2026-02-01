@@ -2,25 +2,32 @@
 using LibrarySystem.Common.DTOs.Library.Borrows;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BorrowController : ControllerBase
     {
         private readonly IBorrowService _service;
+        private readonly ICurrentUserContext _currentUser;
 
-        public BorrowController(IBorrowService service)
+        public BorrowController(
+            IBorrowService service,
+            ICurrentUserContext currentUser)
         {
             _service = service;
+            _currentUser = currentUser;
         }
 
+        [Authorize(Policy = "BorrowCreate")]
         [HttpPost]
         public async Task<IActionResult> BorrowBook([FromBody] BorrowCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto( dto);
+            var validation = ValidationHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -29,30 +36,20 @@ namespace LibrarySystem.API.Controllers
                     Errors = validation.Errors
                 });
 
-            try
-            {
-                await _service.BorrowBook(dto);
+            await _service.BorrowBook(_currentUser.ExternalUserId, dto);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Book borrowed successfully"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return BadRequest(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Book borrowed successfully"
+            });
         }
 
+        [Authorize(Policy = "BorrowReturn")]
         [HttpPut("return")]
         public async Task<IActionResult> ReturnBook([FromBody] BorrowReturnDto dto)
         {
-            var validation = ValidationHelper.ValidateDto( dto);
+            var validation = ValidationHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -61,26 +58,16 @@ namespace LibrarySystem.API.Controllers
                     Errors = validation.Errors
                 });
 
-            try
-            {
-                await _service.ReturnBook(dto);
+            await _service.ReturnBook(dto);
 
-                return Ok(new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = "Book returned successfully"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new BaseResponse<object>
             {
-                return BadRequest(new BaseResponse<object>
-                {
-                    Success = false,
-                    Message = ex.Message
-                });
-            }
+                Success = true,
+                Message = "Book returned successfully"
+            });
         }
 
+        [Authorize(Policy = "BorrowView")]
         [HttpPost("search")]
         public async Task<IActionResult> Search([FromBody] BorrowSearchDto dto)
         {

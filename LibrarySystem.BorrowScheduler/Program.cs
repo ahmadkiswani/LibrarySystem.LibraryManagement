@@ -6,6 +6,7 @@ using LibrarySystem.Services.Interfaces;
 using MassTransit;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Domain.Repositories.Repo;
+using LibrarySystem.Domain.Repositories;
 
 
 var builder = Host.CreateApplicationBuilder(args);

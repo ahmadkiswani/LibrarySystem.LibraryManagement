@@ -1,6 +1,5 @@
 ﻿using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Domain.Repositories.IRepo;
-using LibrarySystem.Domain.Repositories.Repo;
 using LibrarySystem.Entities.Models;
 using LibrarySystem.Services.Interfaces;
 
@@ -21,30 +20,32 @@ namespace LibrarySystem.Services
 
         public async Task AddBookCopy(BookCopyCreateDto dto)
         {
-            var book = await _bookRepo.GetByIdAsync(dto.BookId);
-            if (book == null)
-                throw new Exception("Book does not exist");
+            // 👇 لازم تجيب الكتاب
+            var book = await _bookRepo.GetRequiredByIdAsync(dto.BookId);
 
+            // 👇 وتبعثه
             await _copyRepo.AddCopyAsync(dto, book);
 
-            book.TotalCopies += 1;
-            await _bookRepo.UpdateAsync(book);
+            await _bookRepo.IncrementCopiesAsync(dto.BookId);
         }
 
         public async Task DeleteBookCopy(int id)
         {
-            await _copyRepo.SoftDeleteByIdAsync(id);
+            var minimal = await _copyRepo.GetByIdWithBookIdAsync(id)
+                ?? throw new Exception("Copy not found");
+
+            if (!minimal.IsAvailable)
+                throw new Exception("Cannot delete a borrowed copy");
+
+            await _copyRepo.DeleteCopyAsync(id);
+            await _bookRepo.DecrementCopiesAsync(minimal.BookId);
         }
 
-        public async Task<List<BookCopyListDto>> ListBookCopies()
-        {
-            return await _copyRepo.GetAllListAsync();
-        }
+        public Task<List<BookCopyListDto>> ListBookCopies()
+            => _copyRepo.GetAllListAsync();
 
-        public async Task<BookCopy> GetSpecificCopy(int id)
-        {
-            return await _copyRepo.GetRequiredCopyAsync(id);
-        }
+        public Task<BookCopy> GetSpecificCopy(int id)
+            => _copyRepo.GetRequiredCopyAsync(id);
 
         public Task<int> GetAllCopiesCount(int bookId)
             => _copyRepo.CountByBookAsync(bookId);

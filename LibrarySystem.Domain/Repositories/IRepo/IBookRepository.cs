@@ -3,7 +3,7 @@ using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
 {
-    public interface IBookRepository : IGenericRepository<Book>
+    public interface IBookRepository
     {
         Task<int> AddBookAsync(BookCreateDto dto);
         Task UpdateBookAsync(int id, BookUpdateDto dto);
@@ -13,5 +13,8 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<Book?> GetDetailsAsync(int id);
         Task<List<BookListDto>> SearchAsync(BookSearchDto dto);
         Task<bool> ExistsAsync(BookCreateDto dto);
+
+        Task IncrementCopiesAsync(int bookId);
+        Task DecrementCopiesAsync(int bookId);
     }
 }
