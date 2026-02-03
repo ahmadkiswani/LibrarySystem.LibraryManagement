@@ -5,10 +5,9 @@ namespace LibrarySystem.Services.Interfaces
 {
     public interface IBorrowService
     {
-        Task BorrowBook(BorrowCreateDto dto);
+        Task BorrowBook(int externalUserId, BorrowCreateDto dto);
         Task ReturnBook(BorrowReturnDto dto);
         Task<List<Borrow>> Search(BorrowSearchDto dto);
-        Task MarkOverdueAsync(int borrowId);
-        Task<List<int>> GetOverdueBorrowIdsAsync(DateTime now);
+        Task ProcessOverdueBorrowsAsync(DateTime now);
     }
 }

@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Users;
+using LibrarySystem.Common.DTOs.Library.Users;
 using LibrarySystem.Common.Messaging;
 using LibrarySystem.Services.Interfaces;
 using MassTransit;
@@ -22,6 +22,7 @@ public class UserUpdatedConsumer : IConsumer<UserUpdatedMessage>
             {
                 UserName = msg.UserName,
                 UserEmail = msg.Email,
+                RoleName = msg.RoleName,
             });
     }
 }

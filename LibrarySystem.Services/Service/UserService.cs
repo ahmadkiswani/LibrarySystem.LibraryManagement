@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Users;
+using LibrarySystem.Common.DTOs.Library.Users;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
 
@@ -32,8 +32,10 @@ namespace LibrarySystem.Services
             return new UserDetailsDto
             {
                 Id = user.Id,
+                ExternalUserId = user.ExternalUserId,
                 UserName = user.UserName,
-                UserEmail = user.UserEmail
+                UserEmail = user.UserEmail,
+                RoleName = user.RoleName
             };
         }
     }

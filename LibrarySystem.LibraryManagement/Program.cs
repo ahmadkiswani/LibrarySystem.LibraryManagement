@@ -2,6 +2,7 @@ using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.Messaging;
 using LibrarySystem.Common.Middleware;
 using LibrarySystem.Common.Repositories;
+using LibrarySystem.Domain.Abstractions;
 using LibrarySystem.Domain.Data;
 using LibrarySystem.Domain.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
@@ -76,11 +77,17 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSection["Issuer"],
 
         ValidateAudience = true,
-        ValidAudience = jwtSection["Audience"],
+        ValidAudiences = new[]
+     {
+        jwtSection["Audience"], 
+        "gateway",                   
+        "https://localhost:7171"
+    },
 
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+
 });
 #endregion
 
@@ -230,6 +237,7 @@ builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
+builder.Services.AddScoped<IAuditUserProvider, AuditUserProvider>();
 
 
 // ===== Generic Repository registrations =====

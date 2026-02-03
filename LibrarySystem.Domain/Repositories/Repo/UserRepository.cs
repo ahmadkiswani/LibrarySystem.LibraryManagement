@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Users;
+using LibrarySystem.Common.DTOs.Library.Users;
 using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
@@ -24,7 +24,8 @@ namespace LibrarySystem.Domain.Repositories.Repo
             {
                 ExternalUserId = dto.ExternalUserId,
                 UserName = dto.UserName,
-                UserEmail = dto.UserEmail
+                UserEmail = dto.UserEmail,
+                RoleName = dto.RoleName
             });
 
             await _repo.SaveAsync();
@@ -37,7 +38,7 @@ namespace LibrarySystem.Domain.Repositories.Repo
 
             user.UserName = dto.UserName;
             user.UserEmail = dto.UserEmail;
-
+            user.RoleName = dto.RoleName;
             await _repo.UpdateAsync(user);
             await _repo.SaveAsync();
         }
@@ -57,7 +58,8 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 .Select(u => new UserListDto
                 {
                     Id = u.Id,
-                    UserName = u.UserName
+                    UserName = u.UserName,
+                    UserTypeName = u.RoleName
                 })
                 .ToListAsync();
 

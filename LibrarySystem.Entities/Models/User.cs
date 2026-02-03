@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace LibrarySystem.Entities.Models
@@ -15,6 +15,8 @@ namespace LibrarySystem.Entities.Models
         [Required, EmailAddress, MaxLength(50)]
         public string UserEmail { get; set; } = string.Empty;
         public int ExternalUserId { get; set; }
+        [MaxLength(50)]
+        public string? RoleName { get; set; }
         public User? CreatedByUser { get; set; }
         public User? LastModifiedByUser { get; set; }
         public User? DeletedByUser { get; set; }

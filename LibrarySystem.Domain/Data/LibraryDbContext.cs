@@ -1,11 +1,22 @@
-﻿using LibrarySystem.Entities.Models;
+using LibrarySystem.Domain.Abstractions;
+using LibrarySystem.Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibrarySystem.Domain.Data
 {
     public class LibraryDbContext : DbContext
     {
+        private readonly IAuditUserProvider? _auditUserProvider;
+
         public LibraryDbContext(DbContextOptions<LibraryDbContext> options) : base(options) { }
+
+        public LibraryDbContext(
+            DbContextOptions<LibraryDbContext> options,
+            IAuditUserProvider? auditUserProvider)
+            : base(options)
+        {
+            _auditUserProvider = auditUserProvider;
+        }
 
         public DbSet<Author> Authors { get; set; }
         public DbSet<Book> Books { get; set; }
@@ -75,15 +86,47 @@ namespace LibrarySystem.Domain.Data
                 entity.HasIndex(x => x.CopyCode).IsUnique();
 
                 entity.HasQueryFilter(x => !x.IsDeleted);
-                
             });
-
-
-
-
-
         }
 
+        public override int SaveChanges()
+        {
+            ApplyAuditFields();
+            return base.SaveChanges();
+        }
 
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyAuditFields();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplyAuditFields()
+        {
+            var now = DateTime.UtcNow;
+            var userId = _auditUserProvider?.GetCurrentUserId();
+
+            foreach (var entry in ChangeTracker.Entries<AuditLog>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedDate = now;
+                        entry.Entity.CreatedBy = userId;
+                        entry.Entity.IsDeleted = false;
+                        break;
+                    case EntityState.Modified:
+                        entry.Entity.LastModifiedDate = now;
+                        entry.Entity.LastModifiedBy = userId;
+                        break;
+                    case EntityState.Deleted:
+                        entry.Entity.IsDeleted = true;
+                        entry.Entity.DeletedDate = now;
+                        entry.Entity.DeletedBy = userId;
+                        entry.State = EntityState.Modified;
+                        break;
+                }
+            }
+        }
     }
 }

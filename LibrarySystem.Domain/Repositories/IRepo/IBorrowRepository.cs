@@ -1,18 +1,22 @@
 ﻿using LibrarySystem.Common.DTOs.Library.Borrows;
-using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
-using LibrarySystem.Common.DTOs;
 
-namespace LibrarySystem.Domain.Repositories
+namespace LibrarySystem.Domain.Repositories.IRepo
 {
-    public interface IBorrowRepository : IGenericRepository<Borrow>
+    public interface IBorrowRepository
     {
-        Task<Borrow> BorrowBookAsync(BorrowCreateDto dto);
-        Task<Borrow> ReturnBookAsync(BorrowReturnDto dto);
-        Task<Borrow?> MarkOverdueAsync(int borrowId);
+        Task BorrowAsync(Borrow borrow, BookCopy copy);
+        Task ReturnAsync(Borrow borrow, BookCopy copy);
+
+        Task<int> CountActiveBorrowsAsync(int userId);
+        Task<BookCopy> GetCopyForBorrowAsync(int copyId);
+        Task<Borrow> GetBorrowForReturnAsync(int borrowId);
 
         Task<List<Borrow>> SearchAsync(BorrowSearchDto dto);
         Task<List<int>> GetOverdueBorrowIdsAsync(DateTime now);
         Task<DateTime?> GetLastBorrowDateByBookAsync(int bookId);
+
+        Task<List<Borrow>> GetBorrowsByIdsAsync(List<int> ids);
+        Task SaveAsync();
     }
 }
