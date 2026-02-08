@@ -1,4 +1,4 @@
-﻿using LibrarySystem.API.Helpers;
+using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.Categories;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -38,6 +38,20 @@ namespace LibrarySystem.API.Controllers
             {
                 Success = true,
                 Message = "Category added successfully"
+            });
+        }
+
+        [Authorize(Policy = "BookView")]
+        [HttpPost("search")]
+        public async Task<IActionResult> Search([FromBody] CategorySearchDto dto)
+        {
+            var categories = await _service.Search(dto);
+
+            return Ok(new BaseResponse<object>
+            {
+                Success = true,
+                Message = "Categories retrieved successfully",
+                Data = categories
             });
         }
 

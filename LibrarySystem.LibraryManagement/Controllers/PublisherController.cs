@@ -1,4 +1,4 @@
-﻿using LibrarySystem.API.Helpers;
+using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.DTOs.Library.Publishers;
 using LibrarySystem.Services.Interfaces;
@@ -38,6 +38,20 @@ namespace LibrarySystem.API.Controllers
             {
                 Success = true,
                 Message = "Publisher added successfully"
+            });
+        }
+
+        [Authorize(Policy = "BookView")]
+        [HttpPost("search")]
+        public async Task<IActionResult> Search([FromBody] PublisherSearchDto dto)
+        {
+            var publishers = await _service.Search(dto);
+
+            return Ok(new BaseResponse<object>
+            {
+                Success = true,
+                Message = "Publishers retrieved successfully",
+                Data = publishers
             });
         }
 

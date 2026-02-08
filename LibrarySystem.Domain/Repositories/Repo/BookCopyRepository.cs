@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.BookCopies;
+using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Helper;
 using LibrarySystem.Domain.Repositories.IRepo;
@@ -84,6 +84,23 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 {
                     Id = c.Id,
                     BookId = c.BookId,
+                    CopyCode = c.CopyCode,
+                    IsAvailable = c.IsAvailable
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<BookCopyListDto>> GetListByBookIdAsync(int bookId)
+        {
+            return await _copyRepo
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(c => c.BookId == bookId)
+                .Select(c => new BookCopyListDto
+                {
+                    Id = c.Id,
+                    BookId = c.BookId,
+                    CopyCode = c.CopyCode,
                     IsAvailable = c.IsAvailable
                 })
                 .ToListAsync();
@@ -106,5 +123,14 @@ namespace LibrarySystem.Domain.Repositories.Repo
         public Task<int> CountBorrowedAsync(int bookId)
             => _copyRepo.GetQueryable().AsNoTracking()
                 .CountAsync(c => c.BookId == bookId && !c.IsAvailable);
+
+        public async Task<BookCopy?> GetFirstAvailableCopyByBookAsync(int bookId)
+        {
+            return await _copyRepo
+                .GetQueryable()
+                .Where(c => c.BookId == bookId && c.IsAvailable)
+                .OrderBy(c => c.Id)
+                .FirstOrDefaultAsync();
+        }
     }
 }

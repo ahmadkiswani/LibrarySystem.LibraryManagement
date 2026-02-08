@@ -1,4 +1,4 @@
-﻿
+
 using LibrarySystem.Common.DTOs.Library.Users;
 
 namespace LibrarySystem.Services.Interfaces
@@ -11,6 +11,7 @@ namespace LibrarySystem.Services.Interfaces
         Task ApplyUserCreatedEvent(UserCreateDto dto);
         Task ApplyUserUpdatedEvent(int externalUserId, UserUpdateDto dto);
         Task ApplyUserDeactivatedEvent(int externalUserId);
+        Task ApplyUserReactivatedEvent(int externalUserId);
 
     }
 }

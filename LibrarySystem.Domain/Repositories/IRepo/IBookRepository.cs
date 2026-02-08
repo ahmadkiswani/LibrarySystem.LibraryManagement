@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Books;
+using LibrarySystem.Common.DTOs.Library.Books;
 using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
@@ -12,6 +12,7 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<Book> GetRequiredByIdAsync(int id);
         Task<Book?> GetDetailsAsync(int id);
         Task<List<BookListDto>> SearchAsync(BookSearchDto dto);
+        Task<int> CountAsync();
         Task<bool> ExistsAsync(BookCreateDto dto);
 
         Task IncrementCopiesAsync(int bookId);

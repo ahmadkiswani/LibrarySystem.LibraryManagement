@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
 	<TargetFramework>net10.0</TargetFramework>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\LibrarySystem.Domain\LibrarySystem.Domain.csproj" />
+    <ProjectReference Include="..\LibrarySystem.Domain\LibrarySystem.Domain.csproj" />
 	<ProjectReference Include="..\LibrarySystem.Entities\LibrarySystem.Entities.csproj" />
 	<ProjectReference Include="..\LibrarySystem.Services\LibrarySystem.Services.csproj" />
   </ItemGroup>

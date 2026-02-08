@@ -1,4 +1,4 @@
-﻿using LibrarySystem.API.Helpers;
+using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.Authors;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -22,6 +22,20 @@ namespace LibrarySystem.API.Controllers
         {
             _service = service;
             _currentUser = currentUser;
+        }
+
+        [Authorize(Policy = "BookView")]
+        [HttpPost("search")]
+        public async Task<IActionResult> Search([FromBody] AuthorSearchDto dto)
+        {
+            var authors = await _service.Search(dto);
+
+            return Ok(new BaseResponse<object>
+            {
+                Success = true,
+                Message = "Authors fetched successfully",
+                Data = authors
+            });
         }
 
         [Authorize(Policy = "BookCreate")]
@@ -113,24 +127,6 @@ namespace LibrarySystem.API.Controllers
             });
         }
 
-        [Authorize]
-        [HttpGet("whoami")]
-        public IActionResult WhoAmI()
-        {
-            return Ok(new
-            {
-                externalUserId = _currentUser.ExternalUserId,
-                localUserId = _currentUser.LocalUserId,
-                roles = User.Claims
-                    .Where(c => c.Type == ClaimTypes.Role)
-                    .Select(c => c.Value)
-                    .ToList(),
-                permissions = User.Claims
-                    .Where(c => c.Type == "permission")
-                    .Select(c => c.Value)
-                    .Distinct()
-                    .ToList()
-            });
-        }
+       
     }
 }

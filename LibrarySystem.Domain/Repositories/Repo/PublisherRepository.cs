@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Publishers;
+using LibrarySystem.Common.DTOs.Library.Publishers;
 using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
@@ -60,14 +60,32 @@ namespace LibrarySystem.Domain.Repositories.Repo
         public Task<bool> ExistsByNameAsync(string name)
             => _repoP.GetQueryable().AnyAsync(p => p.Name == name);
 
-
-
         public Task<bool> ExistsAsync(int id)
-        {
-            return _repoP
+            => _repoP
                 .GetQueryable()
                 .AsNoTracking()
                 .AnyAsync(p => p.Id == id);
+
+        public async Task<List<Publisher>> SearchAsync(
+            string? text,
+            int? number,
+            int page,
+            int pageSize)
+        {
+            var query = _repoP
+                .GetQueryable()
+                .AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(p => p.Name.Contains(text));
+
+            if (number.HasValue)
+                query = query.Where(p => p.Id == number.Value);
+
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         }
 
     }

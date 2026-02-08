@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Categories;
+using LibrarySystem.Common.DTOs.Library.Categories;
 using LibrarySystem.Common.Events;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
@@ -51,5 +51,25 @@ namespace LibrarySystem.Services
 
         public Task<List<CategoryListDto>> ListCategories()
             => _categoryRepo.GetAllListAsync();
+
+        public async Task<List<CategoryListDto>> Search(CategorySearchDto dto)
+        {
+            int page = dto.Page <= 0 ? 1 : dto.Page;
+            int pageSize = dto.PageSize <= 0 || dto.PageSize > 200 ? 10 : dto.PageSize;
+
+            var categories = await _categoryRepo.SearchAsync(
+                dto.Text,
+                dto.Number,
+                page,
+                pageSize);
+
+            return categories
+                .Select(c => new CategoryListDto
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToList();
+        }
     }
 }

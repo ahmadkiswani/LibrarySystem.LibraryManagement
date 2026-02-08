@@ -1,4 +1,4 @@
-﻿using LibrarySystem.API.Helpers;
+using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.Books;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -110,13 +110,23 @@ namespace LibrarySystem.API.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _service.DeleteBook(id);
-
-            return Ok(new BaseResponse<object>
+            try
             {
-                Success = true,
-                Message = "Book deleted successfully"
-            });
+                await _service.DeleteBook(id);
+                return Ok(new BaseResponse<object>
+                {
+                    Success = true,
+                    Message = "Book deleted successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new BaseResponse<object>
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
         }
 
         [Authorize(Policy = "BookView")]

@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.BookCopies;
+using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Services.Interfaces
@@ -8,9 +8,11 @@ namespace LibrarySystem.Services.Interfaces
         Task AddBookCopy(BookCopyCreateDto dto);
         Task DeleteBookCopy(int id);
         Task<List<BookCopyListDto>> ListBookCopies();
+        Task<List<BookCopyListDto>> GetCopiesByBookIdAsync(int bookId);
         Task<BookCopy> GetSpecificCopy(int id);
         Task<int> GetAllCopiesCount(int bookId);
         Task<int> GetAvailableCount(int bookId);
         Task<int> GetBorrowedCount(int bookId);
+        Task<int?> GetFirstAvailableCopyIdByBookAsync(int bookId);
     }
 }

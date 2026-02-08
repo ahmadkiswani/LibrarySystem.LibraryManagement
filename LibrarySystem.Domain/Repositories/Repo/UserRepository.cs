@@ -52,6 +52,21 @@ namespace LibrarySystem.Domain.Repositories.Repo
             await _repo.SaveAsync();
         }
 
+        public async Task ApplyUserReactivatedAsync(int externalUserId)
+        {
+            var user = await GetByExternalIdAsync(externalUserId);
+            if (user == null) return;
+
+            if (user.IsDeleted)
+            {
+                user.IsDeleted = false;
+                user.DeletedDate = null;
+                user.DeletedBy = null;
+                await _repo.UpdateAsync(user);
+                await _repo.SaveAsync();
+            }
+        }
+
         public Task<List<UserListDto>> GetAllListAsync()
             => _repo.GetQueryable()
                 .AsNoTracking()
@@ -59,7 +74,8 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 {
                     Id = u.Id,
                     UserName = u.UserName,
-                    UserTypeName = u.RoleName
+                    UserTypeName = u.RoleName,
+                    IsDeleted = u.IsDeleted
                 })
                 .ToListAsync();
 

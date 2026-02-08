@@ -1,4 +1,4 @@
-﻿using LibrarySystem.API.Helpers;
+using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -38,6 +38,19 @@ namespace LibrarySystem.API.Controllers
             {
                 Success = true,
                 Message = "Copy added successfully"
+            });
+        }
+
+        [Authorize(Policy = "BookView")]
+        [HttpGet("by-book/{bookId:int}")]
+        public async Task<IActionResult> GetByBookId(int bookId)
+        {
+            var copies = await _service.GetCopiesByBookIdAsync(bookId);
+            return Ok(new BaseResponse<object>
+            {
+                Success = true,
+                Message = "Copies fetched",
+                Data = copies
             });
         }
 

@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Books;
+using LibrarySystem.Common.DTOs.Library.Books;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
 
@@ -49,8 +49,14 @@ namespace LibrarySystem.Services
         public Task EditBook(int id, BookUpdateDto dto)
             => _bookRepo.UpdateBookAsync(id, dto);
 
-        public Task DeleteBook(int id)
-            => _bookRepo.SoftDeleteByIdAsync(id);
+        public async Task DeleteBook(int id)
+        {
+            int borrowedCount = await _copyRepo.CountBorrowedAsync(id);
+            if (borrowedCount > 0)
+                throw new Exception("Cannot delete book. Some copies are still borrowed. Return all copies first.");
+
+            await _bookRepo.SoftDeleteByIdAsync(id);
+        }
 
         public async Task<BookDetailsDto> GetBookById(int id)
         {

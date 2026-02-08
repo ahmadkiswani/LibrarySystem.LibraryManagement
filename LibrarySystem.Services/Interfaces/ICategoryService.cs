@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Categories;
+using LibrarySystem.Common.DTOs.Library.Categories;
 
 namespace LibrarySystem.Services.Interfaces
 {
@@ -8,5 +8,6 @@ namespace LibrarySystem.Services.Interfaces
         Task EditCategory(int id, CategoryUpdateDto dto);
         Task DeleteCategory(int id);
         Task<List<CategoryListDto>> ListCategories();
+        Task<List<CategoryListDto>> Search(CategorySearchDto dto);
     }
 }

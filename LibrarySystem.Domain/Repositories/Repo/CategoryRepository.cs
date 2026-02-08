@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Categories;
+using LibrarySystem.Common.DTOs.Library.Categories;
 using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
@@ -59,8 +59,31 @@ namespace LibrarySystem.Domain.Repositories.Repo
         public async Task<Category> GetRequiredByIdAsync(int id)
             => await _repo.GetByIdAsync(id)
                 ?? throw new Exception("Category not found");
+
         public Task<bool> ExistsAsync(int id)
-    => _repo.GetQueryable().AnyAsync(c => c.Id == id);
+            => _repo.GetQueryable().AnyAsync(c => c.Id == id);
+
+        public async Task<List<Category>> SearchAsync(
+            string? text,
+            int? number,
+            int page,
+            int pageSize)
+        {
+            var query = _repo
+                .GetQueryable()
+                .AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(c => c.Name.Contains(text));
+
+            if (number.HasValue)
+                query = query.Where(c => c.Id == number.Value);
+
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
 
     }
 }

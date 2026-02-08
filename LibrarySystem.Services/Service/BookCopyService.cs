@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.BookCopies;
+using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using LibrarySystem.Services.Interfaces;
@@ -44,6 +44,9 @@ namespace LibrarySystem.Services
         public Task<List<BookCopyListDto>> ListBookCopies()
             => _copyRepo.GetAllListAsync();
 
+        public Task<List<BookCopyListDto>> GetCopiesByBookIdAsync(int bookId)
+            => _copyRepo.GetListByBookIdAsync(bookId);
+
         public Task<BookCopy> GetSpecificCopy(int id)
             => _copyRepo.GetRequiredCopyAsync(id);
 
@@ -55,5 +58,11 @@ namespace LibrarySystem.Services
 
         public Task<int> GetBorrowedCount(int bookId)
             => _copyRepo.CountBorrowedAsync(bookId);
+
+        public async Task<int?> GetFirstAvailableCopyIdByBookAsync(int bookId)
+        {
+            var copy = await _copyRepo.GetFirstAvailableCopyByBookAsync(bookId);
+            return copy?.Id;
+        }
     }
 }

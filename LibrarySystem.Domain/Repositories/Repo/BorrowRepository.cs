@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Borrows;
+using LibrarySystem.Common.DTOs.Library.Borrows;
 using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Data;
 using LibrarySystem.Domain.Repositories.IRepo;
@@ -117,6 +117,7 @@ namespace LibrarySystem.Domain.Repositories.Repo
         {
             return _borrowRepo
                 .GetQueryable()
+                .Include(b => b.User)
                 .Where(b => ids.Contains(b.Id))
                 .ToListAsync();
         }
@@ -124,6 +125,111 @@ namespace LibrarySystem.Domain.Repositories.Repo
         public Task SaveAsync()
         {
             return _borrowRepo.SaveAsync();
+        }
+
+        public async Task<Borrow?> GetBorrowWithCopyAndBookAsync(int borrowId)
+        {
+            return await _borrowRepo
+                .GetQueryable()
+                .Include(b => b.User)
+                .Include(b => b.BookCopy)
+                    .ThenInclude(c => c.Book)
+                    .ThenInclude(b => b.Category)
+                .FirstOrDefaultAsync(b => b.Id == borrowId);
+        }
+
+        public async Task<List<Borrow>> GetPendingBorrowsAsync()
+        {
+            return await _borrowRepo
+                .GetQueryable()
+                .Include(b => b.User)
+                .Include(b => b.BookCopy)
+                    .ThenInclude(c => c.Book)
+                .Where(b => b.Status == BorrowStatus.Pending)
+                .OrderBy(b => b.BorrowDate)
+                .ToListAsync();
+        }
+
+        public async Task<List<Borrow>> GetPendingBorrowsByUserIdAsync(int userId)
+        {
+            return await _borrowRepo
+                .GetQueryable()
+                .Include(b => b.User)
+                .Include(b => b.BookCopy)
+                    .ThenInclude(c => c.Book)
+                .Where(b => b.Status == BorrowStatus.Pending && b.UserId == userId)
+                .OrderBy(b => b.BorrowDate)
+                .ToListAsync();
+        }
+
+        public async Task UpdateAsync(Borrow borrow)
+        {
+            await _borrowRepo.UpdateAsync(borrow);
+            await _borrowRepo.SaveAsync();
+        }
+
+        public async Task ReleaseCopyAsync(Borrow borrow, BookCopy copy)
+        {
+            copy.IsAvailable = true;
+            await _borrowRepo.UpdateAsync(borrow);
+            await _copyRepo.UpdateAsync(copy);
+            await _borrowRepo.SaveAsync();
+        }
+
+        public async Task<List<Borrow>> GetBorrowsByUserIdWithBookAsync(int userId)
+        {
+            return await _borrowRepo
+                .GetQueryable()
+                .Include(b => b.BookCopy)
+                    .ThenInclude(c => c.Book)
+                .Where(b => b.UserId == userId)
+                .OrderByDescending(b => b.BorrowDate)
+                .ToListAsync();
+        }
+
+        public async Task<List<Borrow>> GetActiveBorrowsWithUserAndCopyAsync()
+        {
+            return await _borrowRepo
+                .GetQueryable()
+                .Include(b => b.User)
+                .Include(b => b.BookCopy)
+                    .ThenInclude(c => c.Book)
+                        .ThenInclude(book => book.Category)
+                .Where(b => b.Status == BorrowStatus.Borrowed || b.Status == BorrowStatus.Overdue)
+                .OrderBy(b => b.DueDate)
+                .ToListAsync();
+        }
+
+        public Task<int> CountDistinctActiveBorrowersAsync()
+        {
+            return _borrowRepo
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(b => b.Status == BorrowStatus.Borrowed)
+                .Select(b => b.UserId)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public Task<int> CountBorrowsCreatedTodayAsync(DateTime todayUtc)
+        {
+            var start = todayUtc.Date;
+            var end = start.AddDays(1);
+            return _borrowRepo
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(b => b.BorrowDate >= start && b.BorrowDate < end)
+                .CountAsync();
+        }
+
+        public Task<int> CountOverdueAsync(DateTime nowUtc)
+        {
+            return _borrowRepo
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(b => b.ReturnDate == null &&
+                    ((b.Status == BorrowStatus.Borrowed && b.DueDate < nowUtc) || b.Status == BorrowStatus.Overdue))
+                .CountAsync();
         }
     }
 }

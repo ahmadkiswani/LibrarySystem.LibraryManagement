@@ -1,4 +1,5 @@
 using LibrarySystem.Common.DTOs.Library.Helpers;
+using LibrarySystem.Common.Events;
 using LibrarySystem.Common.Messaging;
 using LibrarySystem.Common.Middleware;
 using LibrarySystem.Common.Repositories;
@@ -117,11 +118,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("BorrowView",
         p => p.RequireClaim("permission", "borrow.view"));
 
-    // ===== CATEGORY =====
+    options.AddPolicy("BorrowApprove",
+        p => p.RequireClaim("permission", "borrow.approve"));
+
     options.AddPolicy("CategoryManage",
         p => p.RequireClaim("permission", "category.manage"));
 
-    // ===== USER =====
     options.AddPolicy("UserManage",
         p => p.RequireClaim("permission", "user.manage"));
 });
@@ -147,6 +149,8 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<UserCreatedConsumer>();
     x.AddConsumer<UserUpdatedConsumer>();
     x.AddConsumer<UserDeactivatedConsumer>();
+    x.AddConsumer<UserReactivatedConsumer>();
+    x.AddConsumer<CheckOverdueBorrowsConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -154,6 +158,15 @@ builder.Services.AddMassTransit(x =>
         {
             h.Username(rabbitSection["Username"]);
             h.Password(rabbitSection["Password"]);
+        });
+
+        // Publish BorrowOverdueEvent to borrow.exchange so Reporting (bound to that exchange) receives it
+        cfg.Message<BorrowOverdueEvent>(x => x.SetEntityName("borrow.exchange"));
+        cfg.Publish<BorrowOverdueEvent>(x => x.ExchangeType = ExchangeType.Topic);
+
+        cfg.ReceiveEndpoint("library-check-overdue-borrows", e =>
+        {
+            e.ConfigureConsumer<CheckOverdueBorrowsConsumer>(context);
         });
 
         cfg.ReceiveEndpoint(LibraryQueues.UserCreated, e =>
@@ -187,6 +200,17 @@ builder.Services.AddMassTransit(x =>
                 s.RoutingKey = LibraryRoutingKeys.UserDeactivated;
             });
             e.ConfigureConsumer<UserDeactivatedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint(LibraryQueues.UserReactivated, e =>
+        {
+            e.ConfigureConsumeTopology = false;
+            e.Bind(LibraryExchanges.Users, s =>
+            {
+                s.ExchangeType = ExchangeType.Topic;
+                s.RoutingKey = LibraryRoutingKeys.UserReactivated;
+            });
+            e.ConfigureConsumer<UserReactivatedConsumer>(context);
         });
     });
 });

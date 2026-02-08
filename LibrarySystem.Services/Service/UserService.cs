@@ -22,6 +22,9 @@ namespace LibrarySystem.Services
         public Task ApplyUserDeactivatedEvent(int externalUserId)
             => _userRepo.ApplyUserDeactivatedAsync(externalUserId);
 
+        public Task ApplyUserReactivatedEvent(int externalUserId)
+            => _userRepo.ApplyUserReactivatedAsync(externalUserId);
+
         public Task<List<UserListDto>> ListUsers()
             => _userRepo.GetAllListAsync();
 

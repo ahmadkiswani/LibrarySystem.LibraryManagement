@@ -42,6 +42,26 @@ namespace LibrarySystem.Domain.Data
                 .HasForeignKey(b => b.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Book>(entity =>
+            {
+                entity.HasQueryFilter(x => !x.IsDeleted);
+            });
+
+            modelBuilder.Entity<Author>(entity =>
+            {
+                entity.HasQueryFilter(x => !x.IsDeleted);
+            });
+
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasQueryFilter(x => !x.IsDeleted);
+            });
+
+            modelBuilder.Entity<Publisher>(entity =>
+            {
+                entity.HasQueryFilter(x => !x.IsDeleted);
+            });
+
             modelBuilder.Entity<BookCopy>()
                 .HasOne(bc => bc.Book)
                 .WithMany(b => b.Copies)

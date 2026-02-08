@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Books;
+using LibrarySystem.Common.DTOs.Library.Books;
 using LibrarySystem.Domain.Data;
 using LibrarySystem.Domain.Helper;
 using LibrarySystem.Domain.Repositories.IRepo;
@@ -90,6 +90,11 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 .FirstOrDefaultAsync(b => b.Id == id);
         }
 
+        public Task<int> CountAsync()
+        {
+            return _context.Books.CountAsync(b => !b.IsDeleted);
+        }
+
         public async Task<List<BookListDto>> SearchAsync(BookSearchDto dto)
         {
             int page = dto.Page > 0 ? dto.Page.Value : 1;
@@ -119,6 +124,7 @@ namespace LibrarySystem.Domain.Repositories.Repo
             }
 
             return await query
+                .OrderBy(b => b.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(b => new BookListDto
@@ -127,7 +133,9 @@ namespace LibrarySystem.Domain.Repositories.Repo
                     Title = b.Title,
                     AuthorName = b.Author.AuthorName,
                     CategoryName = b.Category.Name,
-                    PublisherName = b.Publisher != null ? b.Publisher.Name : string.Empty
+                    PublisherName = b.Publisher != null ? b.Publisher.Name : string.Empty,
+                    TotalCopies = _context.BookCopies.Count(c => c.BookId == b.Id && !c.IsDeleted),
+                    AvailableCopies = _context.BookCopies.Count(c => c.BookId == b.Id && c.IsAvailable && !c.IsDeleted)
                 })
                 .ToListAsync();
         }

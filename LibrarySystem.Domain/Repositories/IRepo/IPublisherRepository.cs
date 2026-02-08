@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.DTOs.Library.Publishers;
+using LibrarySystem.Common.DTOs.Library.Publishers;
 using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
@@ -13,5 +13,7 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<Publisher> GetRequiredByIdAsync(int id);
 
         Task<bool> ExistsAsync(int id);
+
+        Task<List<Publisher>> SearchAsync(string? text, int? number, int page, int pageSize);
     }
 }

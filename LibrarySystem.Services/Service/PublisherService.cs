@@ -1,6 +1,7 @@
-﻿using LibrarySystem.Common.DTOs.Library.Publishers;
+using LibrarySystem.Common.DTOs.Library.Publishers;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
+using System.Linq;
 
 namespace LibrarySystem.Services
 {
@@ -24,5 +25,25 @@ namespace LibrarySystem.Services
 
         public Task<List<PublisherListDto>> ListPublishers()
             => _publisherRepo.GetAllListAsync();
+
+        public async Task<List<PublisherListDto>> Search(PublisherSearchDto dto)
+        {
+            int page = dto.Page <= 0 ? 1 : dto.Page;
+            int pageSize = dto.PageSize <= 0 || dto.PageSize > 200 ? 10 : dto.PageSize;
+
+            var publishers = await _publisherRepo.SearchAsync(
+                dto.Text,
+                dto.Number,
+                page,
+                pageSize);
+
+            return publishers
+                .Select(p => new PublisherListDto
+                {
+                    Id = p.Id,
+                    Name = p.Name
+                })
+                .ToList();
+        }
     }
 }
