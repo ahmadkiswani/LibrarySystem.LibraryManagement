@@ -1,4 +1,3 @@
-﻿
 using LibrarySystem.Common.DTOs.Library.Books;
 
 namespace LibrarySystem.Services.Interfaces
@@ -10,7 +9,7 @@ namespace LibrarySystem.Services.Interfaces
         Task<BookDetailsDto> GetBookById(int id);
         Task EditBook(int id, BookUpdateDto dto);
         Task DeleteBook(int id);
-        Task<List<BookListDto>> SearchBooks(BookSearchDto dto);
+        Task<BookSearchResultDto> SearchBooks(BookSearchDto dto);
         Task<BookDetailsDto> GetBookDetails(int id);
 
 

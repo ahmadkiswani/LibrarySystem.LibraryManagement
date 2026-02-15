@@ -1,4 +1,5 @@
 using LibrarySystem.Common.DTOs.Library.Borrows;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Data;
 using LibrarySystem.Domain.Repositories.IRepo;
@@ -84,6 +85,7 @@ namespace LibrarySystem.Domain.Repositories.Repo
 
             int page = dto.Page > 0 ? dto.Page : 1;
             int pageSize = dto.PageSize > 0 ? dto.PageSize : 10;
+            AppHelper.NormalizePage(ref page, ref pageSize, 10, 200);
 
             return await query
                 .Skip((page - 1) * pageSize)

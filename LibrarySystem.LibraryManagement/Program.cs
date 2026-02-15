@@ -1,3 +1,5 @@
+using LibrarySystem.Common.Auth;
+using LibrarySystem.Common.Configuration;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.Events;
 using LibrarySystem.Common.Messaging;
@@ -59,7 +61,7 @@ builder.Services.AddDbContext<LibraryDbContext>(options =>
 #endregion
 
 #region JWT Authentication
-var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtSection = builder.Configuration.GetSection(ConfigSectionNames.Jwt);
 var key = Encoding.UTF8.GetBytes(jwtSection["Key"]!);
 
 builder.Services.AddAuthentication(options =>
@@ -92,40 +94,19 @@ builder.Services.AddAuthentication(options =>
 });
 #endregion
 
-#region Authorization Policies (?? ???????)
+#region Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
-    // ===== BOOK =====
-    options.AddPolicy("BookCreate",
-        p => p.RequireClaim("permission", "book.create"));
-
-    options.AddPolicy("BookUpdate",
-        p => p.RequireClaim("permission", "book.update"));
-
-    options.AddPolicy("BookDelete",
-        p => p.RequireClaim("permission", "book.delete"));
-
-    options.AddPolicy("BookView",
-        p => p.RequireClaim("permission", "book.view"));
-
-    // ===== BORROW =====
-    options.AddPolicy("BorrowCreate",
-        p => p.RequireClaim("permission", "borrow.create"));
-
-    options.AddPolicy("BorrowReturn",
-        p => p.RequireClaim("permission", "borrow.return"));
-
-    options.AddPolicy("BorrowView",
-        p => p.RequireClaim("permission", "borrow.view"));
-
-    options.AddPolicy("BorrowApprove",
-        p => p.RequireClaim("permission", "borrow.approve"));
-
-    options.AddPolicy("CategoryManage",
-        p => p.RequireClaim("permission", "category.manage"));
-
-    options.AddPolicy("UserManage",
-        p => p.RequireClaim("permission", "user.manage"));
+    options.AddPolicy("BookCreate", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BookCreate));
+    options.AddPolicy("BookUpdate", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BookUpdate));
+    options.AddPolicy("BookDelete", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BookDelete));
+    options.AddPolicy("BookView", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BookView));
+    options.AddPolicy("BorrowCreate", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BorrowCreate));
+    options.AddPolicy("BorrowReturn", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BorrowReturn));
+    options.AddPolicy("BorrowView", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BorrowView));
+    options.AddPolicy("BorrowApprove", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.BorrowApprove));
+    options.AddPolicy("CategoryManage", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.CategoryManage));
+    options.AddPolicy("UserManage", p => p.RequireClaim(AuthClaimTypes.Permission, PermissionNames.UserManage));
 });
 #endregion
 
@@ -140,9 +121,9 @@ builder.Services.AddCors(options =>
 #endregion
 
 #region RabbitMQ + MassTransit
-var rabbitSection = builder.Configuration.GetSection("RabbitMq");
+var rabbitSection = builder.Configuration.GetSection(ConfigSectionNames.RabbitMq);
 if (!rabbitSection.Exists())
-    throw new Exception("RabbitMq configuration section is missing");
+    throw new Exception($"{ConfigSectionNames.RabbitMq} configuration section is missing");
 
 builder.Services.AddMassTransit(x =>
 {
@@ -264,7 +245,6 @@ builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 builder.Services.AddScoped<IAuditUserProvider, AuditUserProvider>();
 
 
-// ===== Generic Repository registrations =====
 builder.Services.AddScoped<IRepository<Author>, Repository<LibraryDbContext, Author>>();
 builder.Services.AddScoped<IRepository<Book>, Repository<LibraryDbContext, Book>>();
 builder.Services.AddScoped<IRepository<BookCopy>, Repository<LibraryDbContext, BookCopy>>();

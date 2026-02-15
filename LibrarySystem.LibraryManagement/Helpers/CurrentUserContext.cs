@@ -1,6 +1,7 @@
-﻿using LibrarySystem.Domain.Repositories.IRepo;
+using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
 using System.Security.Claims;
+using LibrarySystem.Common.Helpers.Auth;
 using Microsoft.AspNetCore.Http;
 
 
@@ -18,14 +19,8 @@ namespace LibrarySystem.Helper.Api
             var user = httpContextAccessor.HttpContext?.User
                 ?? throw new Exception("No HttpContext");
 
-            var externalId =
-                user.FindFirstValue(ClaimTypes.NameIdentifier) ??
-                user.FindFirstValue("sub");
-
-            if (string.IsNullOrWhiteSpace(externalId))
-                throw new Exception("UserId claim missing");
-
-            ExternalUserId = int.Parse(externalId);
+            ExternalUserId = user.TryGetExternalUserId()
+                ?? throw new Exception("UserId claim missing");
 
             var localUser = userRepo
                 .GetByExternalIdAsync(ExternalUserId)

@@ -1,5 +1,6 @@
-﻿using LibrarySystem.API.Helpers;
 using LibrarySystem.Common.DTOs.Library.Helpers;
+using LibrarySystem.Common.DTOs.Library.Users;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,30 @@ namespace LibrarySystem.API.Controllers
                 Success = true,
                 Message = "Users retrieved successfully",
                 Data = users
+            });
+        }
+
+        [HttpPost("search")]
+        public async Task<IActionResult> Search(
+            [FromBody] UserSearchDto dto,
+            [FromQuery] string? status = null,
+            [FromQuery] int? page = null,
+            [FromQuery] int? pageSize = null)
+        {
+            // Query string takes precedence (more reliable through gateway / POST)
+            if (!string.IsNullOrWhiteSpace(status))
+                dto.Status = status.Trim();
+            if (page.HasValue && page.Value > 0)
+                dto.Page = page.Value;
+            if (pageSize.HasValue && pageSize.Value > 0)
+                dto.PageSize = pageSize.Value;
+            var result = await _service.Search(dto);
+
+            return Ok(new BaseResponse<object>
+            {
+                Success = true,
+                Message = "Users retrieved successfully",
+                Data = result
             });
         }
 

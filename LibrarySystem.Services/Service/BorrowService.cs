@@ -1,11 +1,10 @@
 using LibrarySystem.Common.DTOs.Library.Borrows;
+using LibrarySystem.Common.DTOs.Library;
 using LibrarySystem.Common.Events;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using LibrarySystem.Services.Interfaces;
-using LibrarySystem.Services.Models;
 using MassTransit;
-
 namespace LibrarySystem.Services
 {
     public class BorrowService : IBorrowService

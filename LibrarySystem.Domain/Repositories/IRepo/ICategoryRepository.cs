@@ -16,6 +16,6 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<bool> ExistsAsync(int id);
 
         Task<List<Category>> SearchAsync(string? text, int? number, int page, int pageSize);
-
+        Task<int> CountForSearchAsync(string? text, int? number);
     }
 }

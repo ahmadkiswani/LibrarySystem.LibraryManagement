@@ -79,6 +79,58 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 })
                 .ToListAsync();
 
+        public async Task<List<UserListDto>> SearchAsync(string? text, int? number, string? status, int page, int pageSize)
+        {
+            var query = _repo.GetQueryable().AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(u => u.UserName.Contains(text) || (u.UserEmail != null && u.UserEmail.Contains(text)));
+
+            if (number.HasValue)
+                query = query.Where(u => u.Id == number.Value || u.ExternalUserId == number.Value);
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (string.Equals(status, "active", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(u => !u.IsDeleted);
+                else if (string.Equals(status, "deactivated", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(u => u.IsDeleted);
+            }
+
+            return await query
+                .Select(u => new UserListDto
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    UserTypeName = u.RoleName,
+                    IsDeleted = u.IsDeleted
+                })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountForSearchAsync(string? text, int? number, string? status)
+        {
+            var query = _repo.GetQueryable().AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(u => u.UserName.Contains(text) || (u.UserEmail != null && u.UserEmail.Contains(text)));
+
+            if (number.HasValue)
+                query = query.Where(u => u.Id == number.Value || u.ExternalUserId == number.Value);
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (string.Equals(status, "active", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(u => !u.IsDeleted);
+                else if (string.Equals(status, "deactivated", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(u => u.IsDeleted);
+            }
+
+            return await query.CountAsync();
+        }
+
         public async Task<User> GetRequiredByIdAsync(int id)
             => await _repo.GetByIdAsync(id)
                 ?? throw new Exception("User not found");

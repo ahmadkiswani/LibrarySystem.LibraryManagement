@@ -1,4 +1,4 @@
-using LibrarySystem.API.Helpers;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Common.DTOs.Library.BookCopies;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -23,7 +23,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCopy([FromBody] BookCopyCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {

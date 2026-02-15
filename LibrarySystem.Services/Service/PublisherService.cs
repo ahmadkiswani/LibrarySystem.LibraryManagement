@@ -1,4 +1,6 @@
+using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.DTOs.Library.Publishers;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
 using System.Linq;
@@ -26,10 +28,11 @@ namespace LibrarySystem.Services
         public Task<List<PublisherListDto>> ListPublishers()
             => _publisherRepo.GetAllListAsync();
 
-        public async Task<List<PublisherListDto>> Search(PublisherSearchDto dto)
+        public async Task<PagedResultDto<PublisherListDto>> Search(PublisherSearchDto dto)
         {
             int page = dto.Page <= 0 ? 1 : dto.Page;
             int pageSize = dto.PageSize <= 0 || dto.PageSize > 200 ? 10 : dto.PageSize;
+            AppHelper.NormalizePage(ref page, ref pageSize, 10, 200);
 
             var publishers = await _publisherRepo.SearchAsync(
                 dto.Text,
@@ -37,13 +40,22 @@ namespace LibrarySystem.Services
                 page,
                 pageSize);
 
-            return publishers
-                .Select(p => new PublisherListDto
+            var totalCount = await _publisherRepo.CountForSearchAsync(dto.Text, dto.Number);
+            var info = AppHelper.BuildPagingInfo(totalCount, page, pageSize);
+
+            return new PagedResultDto<PublisherListDto>
+            {
+                Data = publishers.Select(p => new PublisherListDto
                 {
                     Id = p.Id,
                     Name = p.Name
-                })
-                .ToList();
+                }).ToList(),
+                TotalCount = (int)info.TotalCount,
+                Page = info.Page,
+                PageSize = info.PageSize,
+                TotalPages = info.TotalPages,
+                HasNextPage = info.HasNextPage
+            };
         }
     }
 }

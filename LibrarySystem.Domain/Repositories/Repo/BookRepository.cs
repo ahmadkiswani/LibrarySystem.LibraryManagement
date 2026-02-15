@@ -140,6 +140,30 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 .ToListAsync();
         }
 
+        public async Task<int> CountForSearchAsync(BookSearchDto dto)
+        {
+            var query = _context.Books
+                .AsNoTracking()
+                .AsQueryable();
+
+            bool hasFilter =
+                !string.IsNullOrWhiteSpace(dto.Title) ||
+                (dto.AuthorId ?? 0) > 0 ||
+                (dto.CategoryId ?? 0) > 0 ||
+                (dto.PublisherId ?? 0) > 0;
+
+            if (hasFilter)
+            {
+                query = query.Where(b =>
+                    (!string.IsNullOrWhiteSpace(dto.Title) && b.Title.Contains(dto.Title!)) ||
+                    ((dto.AuthorId ?? 0) > 0 && b.AuthorId == dto.AuthorId) ||
+                    ((dto.CategoryId ?? 0) > 0 && b.CategoryId == dto.CategoryId) ||
+                    ((dto.PublisherId ?? 0) > 0 && b.PublisherId == dto.PublisherId)
+                );
+            }
+
+            return await query.CountAsync();
+        }
 
         public async Task IncrementCopiesAsync(int bookId)
         {

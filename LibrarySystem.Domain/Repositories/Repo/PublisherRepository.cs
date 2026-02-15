@@ -88,5 +88,17 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 .ToListAsync();
         }
 
+        public async Task<int> CountForSearchAsync(string? text, int? number)
+        {
+            var query = _repoP.GetQueryable().AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(p => p.Name.Contains(text));
+
+            if (number.HasValue)
+                query = query.Where(p => p.Id == number.Value);
+
+            return await query.CountAsync();
+        }
     }
 }

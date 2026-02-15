@@ -1,5 +1,7 @@
 using LibrarySystem.Common.DTOs.Library.Categories;
+using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.Events;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
 using MassTransit;
@@ -52,10 +54,11 @@ namespace LibrarySystem.Services
         public Task<List<CategoryListDto>> ListCategories()
             => _categoryRepo.GetAllListAsync();
 
-        public async Task<List<CategoryListDto>> Search(CategorySearchDto dto)
+        public async Task<PagedResultDto<CategoryListDto>> Search(CategorySearchDto dto)
         {
             int page = dto.Page <= 0 ? 1 : dto.Page;
             int pageSize = dto.PageSize <= 0 || dto.PageSize > 200 ? 10 : dto.PageSize;
+            AppHelper.NormalizePage(ref page, ref pageSize, 10, 200);
 
             var categories = await _categoryRepo.SearchAsync(
                 dto.Text,
@@ -63,13 +66,22 @@ namespace LibrarySystem.Services
                 page,
                 pageSize);
 
-            return categories
-                .Select(c => new CategoryListDto
+            var totalCount = await _categoryRepo.CountForSearchAsync(dto.Text, dto.Number);
+            var info = AppHelper.BuildPagingInfo(totalCount, page, pageSize);
+
+            return new PagedResultDto<CategoryListDto>
+            {
+                Data = categories.Select(c => new CategoryListDto
                 {
                     Id = c.Id,
                     Name = c.Name
-                })
-                .ToList();
+                }).ToList(),
+                TotalCount = (int)info.TotalCount,
+                Page = info.Page,
+                PageSize = info.PageSize,
+                TotalPages = info.TotalPages,
+                HasNextPage = info.HasNextPage
+            };
         }
     }
 }

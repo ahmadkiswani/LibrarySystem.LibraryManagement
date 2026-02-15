@@ -12,6 +12,7 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<Book> GetRequiredByIdAsync(int id);
         Task<Book?> GetDetailsAsync(int id);
         Task<List<BookListDto>> SearchAsync(BookSearchDto dto);
+        Task<int> CountForSearchAsync(BookSearchDto dto);
         Task<int> CountAsync();
         Task<bool> ExistsAsync(BookCreateDto dto);
 

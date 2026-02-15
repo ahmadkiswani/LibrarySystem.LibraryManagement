@@ -20,10 +20,8 @@ namespace LibrarySystem.Services
 
         public async Task AddBookCopy(BookCopyCreateDto dto)
         {
-            // 👇 لازم تجيب الكتاب
             var book = await _bookRepo.GetRequiredByIdAsync(dto.BookId);
 
-            // 👇 وتبعثه
             await _copyRepo.AddCopyAsync(dto, book);
 
             await _bookRepo.IncrementCopiesAsync(dto.BookId);

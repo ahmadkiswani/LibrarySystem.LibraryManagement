@@ -1,4 +1,4 @@
-using LibrarySystem.API.Helpers;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Common.DTOs.Library.Books;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -23,7 +23,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddBook([FromBody] BookCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -88,7 +88,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] BookUpdateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -133,7 +133,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPost("search")]
         public async Task<IActionResult> Search([FromBody] BookSearchDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -144,7 +144,7 @@ namespace LibrarySystem.API.Controllers
 
             var result = await _service.SearchBooks(dto);
 
-            return Ok(new BaseResponse<object>
+            return Ok(new BaseResponse<BookSearchResultDto>
             {
                 Success = true,
                 Message = "Books search result",

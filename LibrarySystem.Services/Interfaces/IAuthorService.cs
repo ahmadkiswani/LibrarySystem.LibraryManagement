@@ -1,4 +1,5 @@
-﻿using LibrarySystem.Common.DTOs.Library.Authors;
+using LibrarySystem.Common.DTOs.Library.Authors;
+using LibrarySystem.Common.DTOs.Library.Helpers;
 
 namespace LibrarySystem.Services.Interfaces
 {
@@ -10,6 +11,6 @@ namespace LibrarySystem.Services.Interfaces
 
         Task<List<AuthorListDto>> GetAllAuthors();
         Task<AuthorDetailsDto> GetAuthorById(int id);
-        Task<List<AuthorListDto>> Search(AuthorSearchDto dto);
+        Task<PagedResultDto<AuthorListDto>> Search(AuthorSearchDto dto);
     }
 }

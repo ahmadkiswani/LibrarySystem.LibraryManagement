@@ -1,6 +1,6 @@
 using LibrarySystem.Common.DTOs.Library.Borrows;
+using LibrarySystem.Common.DTOs.Library;
 using LibrarySystem.Entities.Models;
-using LibrarySystem.Services.Models;
 
 namespace LibrarySystem.Services.Interfaces
 {

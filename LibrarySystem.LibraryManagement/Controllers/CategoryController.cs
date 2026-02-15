@@ -1,4 +1,4 @@
-using LibrarySystem.API.Helpers;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Common.DTOs.Library.Categories;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -23,7 +23,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] CategoryCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -73,7 +73,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] CategoryUpdateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {

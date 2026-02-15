@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Entities.Models;
+using LibrarySystem.Entities.Models;
 
 namespace LibrarySystem.Domain.Repositories.IRepo
 {
@@ -12,6 +12,7 @@ namespace LibrarySystem.Domain.Repositories.IRepo
         Task<List<Author>> GetAllAsync();
 
         Task<List<Author>> SearchAsync(string? text, int? number, int page, int pageSize);
+        Task<int> CountForSearchAsync(string? text, int? number);
 
         Task<bool> ExistsAsync(int authorId);
     }

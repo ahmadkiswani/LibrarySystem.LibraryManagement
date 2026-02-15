@@ -1,4 +1,4 @@
-
+using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Common.DTOs.Library.Publishers;
 
 namespace LibrarySystem.Services.Interfaces
@@ -9,6 +9,6 @@ namespace LibrarySystem.Services.Interfaces
         Task EditPublisher(int id, PublisherUpdateDto dto);
         Task DeletePublisher(int id);
         Task<List<PublisherListDto>> ListPublishers();
-        Task<List<PublisherListDto>> Search(PublisherSearchDto dto);
+        Task<PagedResultDto<PublisherListDto>> Search(PublisherSearchDto dto);
     }
 }

@@ -12,6 +12,8 @@ namespace LibrarySystem.Domain.Repositories.IRepo
 
         Task<User> GetRequiredByIdAsync(int id);
         Task<List<UserListDto>> GetAllListAsync();
+        Task<List<UserListDto>> SearchAsync(string? text, int? number, string? status, int page, int pageSize);
+        Task<int> CountForSearchAsync(string? text, int? number, string? status);
 
         Task<User?> GetByExternalIdAsync(int externalUserId);
         Task<bool> ExistsByExternalIdAsync(int externalUserId);

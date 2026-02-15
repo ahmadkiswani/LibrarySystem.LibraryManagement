@@ -1,4 +1,4 @@
-using LibrarySystem.API.Helpers;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Common.DTOs.Library.Authors;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -42,7 +42,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddAuthor([FromBody] AuthorCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
             {
                 return BadRequest(new BaseResponse<object>
@@ -94,7 +94,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] AuthorUpdateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
             {
                 return BadRequest(new BaseResponse<object>

@@ -1,5 +1,4 @@
-using LibrarySystem.API.Helpers;
-using LibrarySystem.API.Models;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Common.DTOs.Library.Borrows;
 using LibrarySystem.Common.DTOs.Library.Helpers;
 using LibrarySystem.Services.Interfaces;
@@ -28,7 +27,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPost]
         public async Task<IActionResult> BorrowBook([FromBody] BorrowCreateDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {
@@ -77,7 +76,7 @@ namespace LibrarySystem.API.Controllers
         public async Task<IActionResult> GetMyPendingBorrows()
         {
             var borrows = await _service.GetMyPendingBorrows(_currentUser.ExternalUserId);
-            var list = borrows.Select(b => new PendingBorrowItemDto
+            var list = borrows.Select(b => new PendingBorrowListItemDto
             {
                 Id = b.Id,
                 UserId = b.UserId,
@@ -126,7 +125,7 @@ namespace LibrarySystem.API.Controllers
         public async Task<IActionResult> GetPendingBorrows()
         {
             var borrows = await _service.GetPendingBorrows();
-            var list = borrows.Select(b => new PendingBorrowItemDto
+            var list = borrows.Select(b => new PendingBorrowListItemDto
             {
                 Id = b.Id,
                 UserId = b.UserId,
@@ -172,7 +171,7 @@ namespace LibrarySystem.API.Controllers
         [HttpPut("return")]
         public async Task<IActionResult> ReturnBook([FromBody] BorrowReturnDto dto)
         {
-            var validation = ValidationHelper.ValidateDto(dto);
+            var validation = AppHelper.ValidateDto(dto);
             if (!validation.IsValid)
                 return BadRequest(new BaseResponse<object>
                 {

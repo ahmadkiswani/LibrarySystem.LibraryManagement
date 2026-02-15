@@ -1,4 +1,5 @@
 using LibrarySystem.Common.DTOs.Library.Books;
+using LibrarySystem.Common.Helpers;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Services.Interfaces;
 
@@ -87,8 +88,27 @@ namespace LibrarySystem.Services
         public Task<List<BookListDto>> GetAllBooks()
             => _bookRepo.SearchAsync(new BookSearchDto());
 
-        public Task<List<BookListDto>> SearchBooks(BookSearchDto dto)
-            => _bookRepo.SearchAsync(dto);
+        public async Task<BookSearchResultDto> SearchBooks(BookSearchDto dto)
+        {
+            int page = dto.Page ?? 1;
+            int pageSize = dto.PageSize ?? 10;
+            AppHelper.NormalizePage(ref page, ref pageSize, defaultPageSize: 10, maxPageSize: 200);
+
+            var data = await _bookRepo.SearchAsync(dto);
+            var totalCount = await _bookRepo.CountForSearchAsync(dto);
+
+            var info = AppHelper.BuildPagingInfo(totalCount, page, pageSize);
+
+            return new BookSearchResultDto
+            {
+                Data = data,
+                TotalCount = (int)info.TotalCount,
+                Page = info.Page,
+                PageSize = info.PageSize,
+                TotalPages = info.TotalPages,
+                HasNextPage = info.HasNextPage
+            };
+        }
 
         public Task<BookDetailsDto> GetBookDetails(int id)
             => GetBookById(id);

@@ -1,4 +1,4 @@
-﻿using LibrarySystem.Common.Repositories;
+using LibrarySystem.Common.Repositories;
 using LibrarySystem.Domain.Repositories.IRepo;
 using LibrarySystem.Entities.Models;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +65,19 @@ namespace LibrarySystem.Domain.Repositories.Repo
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+        }
+
+        public async Task<int> CountForSearchAsync(string? text, int? number)
+        {
+            var query = _authorRepo.GetQueryable().AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(a => a.AuthorName.Contains(text));
+
+            if (number.HasValue)
+                query = query.Where(a => a.Id == number.Value);
+
+            return await query.CountAsync();
         }
 
         public Task<bool> ExistsAsync(int authorId)
